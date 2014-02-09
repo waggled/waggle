@@ -21,7 +21,7 @@ APP_DIR = os.path.dirname( globals()['__file__'] )
 SECRET_KEY = '^3b6e#ozdosxrc1k@law(7nz=(tl-7$7)%0zz-kp-l%gu&t$a5'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 TEMPLATE_DEBUG = True
 

@@ -28,7 +28,7 @@ def check_and_compute(election):
             result.save()
             election.results.append(result)
     election.save()
-    return
+    return election
 
 def computeFPP(election, system):
     ballots = Ballot.objects(election=election, system=system)
@@ -38,9 +38,9 @@ def computeFPP(election, system):
     for ballot in ballots:
         cand = ballot.content[0].candidate
         res[cand] = res[cand] + 1.
-    return get_ranking_from_scores(res)
+    return get_ranking_from_scores(election.candidates,res)
 
-def get_ranking_from_scores(d):
+def get_ranking_from_scores(candidates_names,d):
     # This method returns a list of ResultRanking EmbeddedDocuments with d being a dictionary with candidates as keys and scores as values, ordered from winner to loser
     ranking = []
     current_rank = 0
@@ -53,7 +53,7 @@ def get_ranking_from_scores(d):
         else:
             nb_ex_aequo = nb_ex_aequo + 1
         temp = ResultRanking()
-        temp.candidate = item[0]
+        temp.candidate = candidates_names[item[0]]
         temp.score = score
         temp.rank = current_rank
         prev_score=score

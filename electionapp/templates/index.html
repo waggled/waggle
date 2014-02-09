@@ -3,11 +3,16 @@
   <head>
   </head> 
   <body>
-	<h1>Bienvenue sur Waggle !</h1>
-	<p>En toute transparence !</p>
+	<h1>Welcome to Waggle!</h1>
+	<h2>Ongoing polls:</h2>
     {% for election in Elections %}
-      <h2> {{ election.name }} </h2>
-      <p>{{ election.creation_date }}</p>
+        <h3> {{ election.name }} </h3>
+        <p>Started on {{ election.creation_date }}</p>
+        {% if election.open %}
+            <p>Still open.</p>
+        {% else %}
+            <p>Closed on {{ election.closing_date }} </p>
+        {% endif %}
     {% endfor %}
   </body>
 </html>

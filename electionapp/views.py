@@ -2,6 +2,7 @@
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, Http404
 from models import *
+import results
 import datetime
 from electionapp.settings import *
 
@@ -67,17 +68,18 @@ def admin_election(request, election):
     return render_to_response('admin_election.html', {'election': election})
 
 def view_results(request, election):
-    result = []
-    return render_to_response('view_results.html', {'election': election, 'results': result})
+    election = results.check_and_compute(election)
+    return render_to_response('view_results.html', {'election': election})
 
 def voting_page(request, election, user):
     return render_to_response('voting_page.html')
 
 def create(request):
-	return render_to_response('index.html')
+	return render_to_response('create.html')
 
 def systems(request):
-	return render_to_response('index.html')
+    systems = System.objects
+    return render_to_response('systems.html', {'systems':systems})
 
 def dashboard(request):
 	return render_to_response('index.html')

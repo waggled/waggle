@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  </head> 
+  <body>
+	<h1>Learn more about our systems!</h1>
+	<h2>Currently used:</h2>
+    {% for system in systems %}
+        <h3>{{ system.name }}</h3>
+        <p>How you vote: {{ system.description.ballot }}</p>
+        <p>Who wins: {{ system.description.computation }}</p>
+    {% endfor %}
+  </body>
+</html>

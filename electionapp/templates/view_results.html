@@ -7,14 +7,17 @@
     {% if election.open %}
         <p>Sorry, this poll is still open, results are not available yet.</p>
     {% else %}
-    <p>Results are available, this poll was closed on {{ election.closing_date }}.</p>
-        <ul>
-        {% for result in results %}
-            <li> Here we shall print results with system {{ result.system.name }} </li>
+        <p>Results are available, this poll was closed on {{ election.closing_date }}.</p>
+        {% for result in election.results %}
+            <p> Below are the results with system {{ result.system.name }} </p>
+            <ul>
+                {% for result_ranking in result.ranking %}
+                <li>{{ result_ranking.rank }}: {{ result_ranking.candidate }} with score {{ result_ranking.score }} </li>
+                {% endfor %}
+            </ul>
         {% empty %}
             <p>Weird... no result has been sent to this template.</p>
         {% endfor %}
-        </ul>
     {% endif %}
   </body>
 </html>
