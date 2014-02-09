@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  </head> 
+  <body>
+	<h1>Bienvenue sur Waggle !</h1>
+	<p>En toute transparence !</p>
+    {% for election in Elections %}
+      <h2> {{ election.name }} </h2>
+      <p>{{ election.creation_date }}</p>
+    {% endfor %}
+  </body>
+</html>

@@ -1,0 +1,2 @@
+KEYA_LEN = 16
+KEYB_LEN = 8
