@@ -87,3 +87,6 @@ def account(request):
 
 def about(request):
 	return render_to_response('about.html')
+
+def custom_404(request):
+    return render_to_response('404.html')

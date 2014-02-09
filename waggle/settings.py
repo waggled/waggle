@@ -21,11 +21,11 @@ APP_DIR = os.path.dirname( globals()['__file__'] )
 SECRET_KEY = '^3b6e#ozdosxrc1k@law(7nz=(tl-7$7)%0zz-kp-l%gu&t$a5'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 TEMPLATE_DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost']
 
 
 # Application definition

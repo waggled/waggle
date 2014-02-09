@@ -6,3 +6,5 @@ from django.conf.urls import patterns, include, url
 urlpatterns = patterns('',
 	url('', include('electionapp.urls')),
 )
+
+handler404 = 'electionapp.views.custom_404'
