@@ -3,6 +3,18 @@
   <head>
   </head> 
   <body>
-	<h1>Page pour voir les résultats !</h1>
+    <h1>Results of the poll "{{election.name}}"</h1>
+    {% if election.open %}
+        <p>Sorry, this poll is still open, results are not available yet.</p>
+    {% else %}
+    <p>Results are available, this poll was closed on {{ election.closing_date }}.</p>
+        <ul>
+        {% for result in results %}
+            <li> Here we shall print results with system {{ result.system.name }} </li>
+        {% empty %}
+            <p>Weird... no result has been sent to this template.</p>
+        {% endfor %}
+        </ul>
+    {% endif %}
   </body>
 </html>

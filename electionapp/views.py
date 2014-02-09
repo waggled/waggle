@@ -22,35 +22,35 @@ def analyze_key(request, key):
             if election['type']==1: #if election is private
                 if len(keyB) == KEYB_LEN:
                     if keyB==election['admin_key']:
-                        return admin_election(request, election['id'])
+                        return admin_election(request, election)
                     else:
                         if keyB in election['guests']: #if keyB is a guest key
                             ballots = Ballot.objects(election=election, user=election['guests'][keyB])
                             if ballots.count()==0: #TODO : distinguish
-                                return voting_page(request, election['id'], election['guests'][keyB]['id'])
+                                return voting_page(request, election, election['guests'][keyB])
                             else:
-                                return voting_page(request, election['id'], election['guests'][keyB]['id'])
+                                return voting_page(request, election, election['guests'][keyB])
                         else:
                             raise Http404
                 else:
                     if election['open']:
-                        redirect('http://www.google.fr')
+                        return view_results(request, election)
                         #TODO: GO TO TEMPLATE RESULTS (and show "sorry")
                     else:
-                        return view_results(election['id'])
+                        return view_results(request, election)
             elif election['type']==2: #else if election is public #TO BE TESTED
                 if len(keyB) == KEYB_LEN:
                     if keyB == election['admin_key']: #if keyB is the admin key
-                        return admin_election(election['id'])
+                        return admin_election(request, election)
                     else:
                         raise Http404
                 elif keyB == '':
                     if election['open']:
                         user = User(ip = request.META['HTTP_X_FORWARDED_FOR'], date=datetime.datetime.now())
                         user.save() #CAUTION : A USER IS CREATED EVEN IF THE VOTE IS NOT VALIDATED
-                        return voting_page(request, election['id'], user['id'])
+                        return voting_page(request, election, user)
                     else:
-                        return view_results(election['id'])
+                        return view_results(request, election)
                 else:
                     raise Http404
             else:
@@ -63,13 +63,14 @@ def analyze_key(request, key):
     else:
         raise Http404
 
-def admin_election(request, election_id):
-    return render_to_response('admin_election.html')
+def admin_election(request, election):
+    return render_to_response('admin_election.html', {'election': election})
 
-def view_results(request, election_id):
-    return render_to_response('view_results.html')
+def view_results(request, election):
+    result = []
+    return render_to_response('view_results.html', {'election': election, 'results': result})
 
-def voting_page(request, election_id, user_id):
+def voting_page(request, election, user):
     return render_to_response('voting_page.html')
 
 def create(request):
