@@ -3,6 +3,11 @@ from models import *
 import datetime
 
 def check_and_compute(election):
+    """
+        Computes all (for each system) results of an election that are not up to date, and returns the election document.
+        Parameters:
+        election - a document of type Election
+    """
     for election_system in election.systems:
         system = election_system.system
         results_already_computed = False
@@ -31,6 +36,8 @@ def check_and_compute(election):
     return election
 
 def computeFPP(election, system):
+    #TODO: change the arguments so that we don't need to give the election and the system but only the candidates and the election id
+    #TODO: then document this function
     ballots = Ballot.objects(election=election, system=system)
     res = dict()
     for key in election.candidates:
@@ -41,7 +48,12 @@ def computeFPP(election, system):
     return get_ranking_from_scores(election.candidates,res)
 
 def get_ranking_from_scores(candidates_names,d):
-    # This method returns a list of ResultRanking EmbeddedDocuments with d being a dictionary with candidates as keys and scores as values, ordered from winner to loser
+    """
+        From a two dictionaries describing respectively the candidates's names and their scores, returns a list of documents of type ResultRanking, describing the ranking of candidates from highest score to lowest.
+        Parameters:
+        candidates_names - a dictionary where keys are candidates ids and values are their names
+        d - a dictionary where keys are candidates ids and values are their scores
+    """
     ranking = []
     current_rank = 0
     nb_ex_aequo = 1
