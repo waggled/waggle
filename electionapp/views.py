@@ -47,13 +47,7 @@ def analyze_key(request, key):
                         raise Http404
                 elif keyB == '':
                     if election['open']:
-                        try:
-                            ip = request.META['HTTP_X_FORWARDED_FOR']
-                        except KeyError:
-                            ip = request.META['REMOTE_ADDR']
-                        user = User(ip=ip, date=datetime.datetime.now(), type=9)
-                        user.save() #CAUTION : A USER IS CREATED EVEN IF THE VOTE IS NOT VALIDATED
-                        return vote(request, election, user)
+                        return vote(request, election)
                     else:
                         return view_results(request, election)
                 else:
@@ -75,7 +69,7 @@ def view_results(request, election):
     election = results.check_and_compute(election)
     return render_to_response('view_results.html', {'election': election})
 
-def vote(request, election, user):
+def vote(request, election, user=None):
     #TODO: adapt to multiple systems by creating a metaForm
     my_choices = []
     for key, value in election.candidates.items():
@@ -86,16 +80,14 @@ def vote(request, election, user):
             method = globals()[method_name]
             form = method(request.POST, choices=my_choices, custom=election_system.custom)
         if form.is_valid():
-            # TODO: Here we can process the data from the form  #HERE FOR FPP
-            ballot = Ballot()
-            ballot.date = datetime.datetime.now()
-            ballot.user = User.objects[0] #TODO: modify
-            ballot_content = BallotContent()
-            ballot_content.candidate = form.cleaned_data['candidates']
-            ballot.content = [ballot_content]
-            ballot.system = System.objects(key='FPP')[0] #TODO: modify
-            ballot.election = election
-            ballot.save()
+            if user==None:
+                try:
+                    ip = request.META['HTTP_X_FORWARDED_FOR']
+                except KeyError:
+                    ip = request.META['REMOTE_ADDR']
+                user = User(ip=ip, type=9)
+                user.save()
+            results.cast_ballot(form.cleaned_data, user, election.systems[0].system, election)
             return render_to_response('voting_page.html', {'form':form, 'send':True, 'election':election}, context_instance=RequestContext(request))
         else:
             return render_to_response('voting_page.html', {'form':form, 'send':False, 'election':election}, context_instance=RequestContext(request))

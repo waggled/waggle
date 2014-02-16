@@ -3,6 +3,7 @@ import os
 import sys
 sys.path.append(os.path.abspath('..'))
 from waggle.settings import DBNAME
+import datetime
 
 connect(DBNAME)
 
@@ -53,6 +54,9 @@ class Election(Document):
 # USERS
 
 class User(Document):
+    def __init__(self, *args, **kwargs):
+        super(User, self).__init__(*args, **kwargs)
+        self.date=datetime.datetime.now()
     type = IntField(required=True)
     email = EmailField()
     fb_id = StringField()

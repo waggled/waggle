@@ -2,6 +2,36 @@
 from models import *
 import datetime
 
+def cast_ballot(form_data, user, system, election):
+    ballot = Ballot()
+    ballot.date = datetime.datetime.now()
+    ballot.system = system
+    ballot.election = election
+    ballot.user = user
+    method_name = 'get_ballot_content_'+system.key
+    method = globals()[method_name]
+    ballot.content = method(form_data)
+    ballot.save()
+    for result in election.results:
+        if result.system == system:
+            result.up_to_date = False
+            result.save()
+    return
+
+def get_ballot_content_FPP(form_data):
+    ballot_content = BallotContent()
+    ballot_content.candidate = form_data['candidates']
+    return [ballot_content]
+
+def get_ballot_content_RGV(form_data):
+    res = []
+    for key,value in form_data.items():
+        ballot_content = BallotContent()
+        ballot_content.candidate = key
+        ballot_content.score = value
+        res.append(ballot_content)
+    return res
+
 def check_and_compute(election):
     """
         Computes all (for each system) results of an election that are not up to date, and returns the election document.
