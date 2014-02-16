@@ -10,9 +10,6 @@ from electionapp.forms import *
 import time
 
 def index(request):
-	#election = Election(name='Hello', creation_date=datetime.datetime.now())
-	#election.save()
-	#Election.drop_collection()
 	elections = Election.objects
 	return render_to_response('index.html', {'Elections': elections})
 
@@ -89,7 +86,16 @@ def vote(request, election, user):
             method = globals()[method_name]
             form = method(request.POST, choices=my_choices, custom=election_system.custom)
         if form.is_valid():
-            # TODO: Here we can process the data from the form
+            # TODO: Here we can process the data from the form  #HERE FOR FPP
+            ballot = Ballot()
+            ballot.date = datetime.datetime.now()
+            ballot.user = User.objects[0] #TODO: modify
+            ballot_content = BallotContent()
+            ballot_content.candidate = form.cleaned_data['candidates']
+            ballot.content = [ballot_content]
+            ballot.system = System.objects(key='FPP')[0] #TODO: modify
+            ballot.election = election
+            ballot.save()
             return render_to_response('voting_page.html', {'form':form, 'send':True, 'election':election}, context_instance=RequestContext(request))
         else:
             return render_to_response('voting_page.html', {'form':form, 'send':False, 'election':election}, context_instance=RequestContext(request))
