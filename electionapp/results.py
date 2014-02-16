@@ -90,7 +90,6 @@ def computeBDA(election_id, candidates, system):
         candidates - election.candidates
         system - System object (should be Borda)
         """
-    print 'hi'
     ballots = Ballot.objects(election=election_id, system=system)
     res = dict()
     for key in candidates:
@@ -101,6 +100,24 @@ def computeBDA(election_id, candidates, system):
             cand = item.candidate
             res[cand] = res[cand] + k
             k = k-1
+    return get_ranking_from_scores(candidates,res)
+
+def computeRGV(election_id, candidates, system):
+    """
+        Returns the RGV ranking of candidates for an election (as a list of ResultRanking documents)
+        Parameters:
+        election_id - ObjectId id of election
+        candidates - election.candidates
+        system - System object (should be Borda)
+        """
+    ballots = Ballot.objects(election=election_id, system=system)
+    res = dict()
+    for key in candidates:
+        res[key] = 0.
+    for ballot in ballots:
+        for item in ballot.content:
+            cand = item.candidate
+            res[cand] = res[cand] + item.score
     return get_ranking_from_scores(candidates,res)
 
 def get_ranking_from_scores(candidates_names,d):
