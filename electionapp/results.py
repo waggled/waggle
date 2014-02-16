@@ -24,7 +24,7 @@ def check_and_compute(election):
             election.results = new_results
             method_name = 'compute' + system.key
             method = globals()[method_name]
-            ranking = method(election, system)
+            ranking = method(election.id, election.candidates, system)
             result = Result()
             result.date = datetime.datetime.now()
             result.ranking = ranking
@@ -35,17 +35,43 @@ def check_and_compute(election):
     election.save()
     return election
 
-def computeFPP(election, system):
-    #TODO: change the arguments so that we don't need to give the election and the system but only the candidates and the election id
-    #TODO: then document this function
-    ballots = Ballot.objects(election=election, system=system)
+def computeFPP(election_id, candidates, system):
+    """
+        Returns the FPP ranking of candidates for an election (as a list of ResultRanking documents)
+        Parameters:
+        election_id - ObjectId id of election
+        candidates - election.candidates
+        system - System object (should be FPP)
+        """
+    ballots = Ballot.objects(election=election_id, system=system)
     res = dict()
-    for key in election.candidates:
+    for key in candidates:
         res[key] = 0.
     for ballot in ballots:
         cand = ballot.content[0].candidate
         res[cand] = res[cand] + 1.
-    return get_ranking_from_scores(election.candidates,res)
+    return get_ranking_from_scores(candidates,res)
+
+def computeBDA(election_id, candidates, system):
+    """
+        Returns the FPP ranking of candidates for an election (as a list of ResultRanking documents)
+        Parameters:
+        election_id - ObjectId id of election
+        candidates - election.candidates
+        system - System object (should be Borda)
+        """
+    print 'hi'
+    ballots = Ballot.objects(election=election_id, system=system)
+    res = dict()
+    for key in candidates:
+        res[key] = 0.
+    for ballot in ballots:
+        k = len(candidates)
+        for item in ballot.content:
+            cand = item.candidate
+            res[cand] = res[cand] + k
+            k = k-1
+    return get_ranking_from_scores(candidates,res)
 
 def get_ranking_from_scores(candidates_names,d):
     """

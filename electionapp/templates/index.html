@@ -8,6 +8,7 @@
     {% for election in Elections %}
     <h3> {{ election.name }} (key {{election.key }}, type {{ election.type }})</h3>
         <p>Started on {{ election.creation_date }}</p>
+        <p>Candidates: {{ election.candidates }}</p>
         {% if election.open %}
             <p>Still open.</p>
         {% else %}
