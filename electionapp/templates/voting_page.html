@@ -3,6 +3,18 @@
   <head>
   </head> 
   <body>
-	<h1>Page pour voter !</h1>
+	<h1>Here you vote!</h1>
+    
+    {{ form.errors }}
+    
+    {% if send %}
+        Your vote has been cas all right!
+    {% else %}
+        <form action="{% url 'electionapp.views.analyze_key' election.key %}" method='post'>{% csrf_token %}
+            {{ form.as_p }}
+            <input type='submit' value='Submit' />
+        </form>
+    {% endif %}
+
   </body>
 </html>

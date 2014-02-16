@@ -1,10 +1,13 @@
 #-*- coding: utf-8 -*-
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, redirect
+from django.template import RequestContext
 from django.http import HttpResponse, Http404
 from models import *
 import results
 import datetime
 from electionapp.settings import *
+from electionapp.forms import *
+import time
 
 def index(request):
 	#election = Election(name='Hello', creation_date=datetime.datetime.now())
@@ -28,9 +31,9 @@ def analyze_key(request, key):
                         if keyB in election['guests']: #if keyB is a guest key
                             ballots = Ballot.objects(election=election, user=election['guests'][keyB])
                             if ballots.count()==0: #TODO : distinguish
-                                return voting_page(request, election, election['guests'][keyB])
+                                return vote(request, election, election['guests'][keyB])
                             else:
-                                return voting_page(request, election, election['guests'][keyB])
+                                return vote(request, election, election['guests'][keyB])
                         else:
                             raise Http404
                 else:
@@ -47,9 +50,13 @@ def analyze_key(request, key):
                         raise Http404
                 elif keyB == '':
                     if election['open']:
-                        user = User(ip = request.META['HTTP_X_FORWARDED_FOR'], date=datetime.datetime.now())
+                        try:
+                            ip = request.META['HTTP_X_FORWARDED_FOR']
+                        except KeyError:
+                            ip = request.META['REMOTE_ADDR']
+                        user = User(ip=ip, date=datetime.datetime.now(), type=9)
                         user.save() #CAUTION : A USER IS CREATED EVEN IF THE VOTE IS NOT VALIDATED
-                        return voting_page(request, election, user)
+                        return vote(request, election, user)
                     else:
                         return view_results(request, election)
                 else:
@@ -71,8 +78,28 @@ def view_results(request, election):
     election = results.check_and_compute(election)
     return render_to_response('view_results.html', {'election': election})
 
-def voting_page(request, election, user):
-    return render_to_response('voting_page.html')
+def vote(request, election, user):
+    #TODO: adapt to multiple systems by creating a metaForm
+    my_choices = []
+    for key, value in election.candidates.items():
+        my_choices.append((key,value))
+    if request.method == 'POST':
+        for election_system in election.systems:
+            method_name = election_system.system.key + 'BallotForm'
+            method = globals()[method_name]
+            form = method(request.POST, choices=my_choices, custom=election_system.custom)
+        if form.is_valid():
+            # TODO: Here we can process the data from the form
+            return render_to_response('voting_page.html', {'form':form, 'send':True, 'election':election}, context_instance=RequestContext(request))
+        else:
+            return render_to_response('voting_page.html', {'form':form, 'send':False, 'election':election}, context_instance=RequestContext(request))
+    else: # GET
+        ballotForms=[]
+        for election_system in election.systems:
+            method_name = election_system.system.key + 'BallotForm'
+            method = globals()[method_name]
+            ballotForms.append(method(choices=my_choices, custom=election_system.custom))
+        return render_to_response('voting_page.html', {'form':ballotForms[0], 'send':False, 'election':election}, context_instance=RequestContext(request))
 
 def create(request):
 	return render_to_response('create.html')

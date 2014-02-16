@@ -42,7 +42,7 @@ class Election(Document):
     admin_key = StringField(max_length=8, required=True)
     open = BooleanField(required=True)
     name = StringField(max_length=120, required=True)
-    candidates = DictField()
+    candidates = DictField(required=True)
     message = StringField(max_length=1000)
     systems = ListField(EmbeddedDocumentField(ElectionSystem))
     guests = DictField()

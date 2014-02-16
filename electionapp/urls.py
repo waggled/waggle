@@ -8,4 +8,5 @@ urlpatterns = patterns('electionapp.views',
 	url(r'^dashboard/$', 'dashboard'),
 	url(r'^account/$', 	'account'),
 	url(r'^(\w+)/$', 'analyze_key'),
+    url(r'^vote/$', 'vote')
 )
