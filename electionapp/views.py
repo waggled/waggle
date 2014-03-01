@@ -63,11 +63,33 @@ def analyze_key(request, key):
         raise Http404
 
 def admin_election(request, election):
-    return render_to_response('admin_election.html', {'election': election})
+    return render_to_response('admin_election.html', {'election': election}, context_instance=RequestContext(request))
 
 def view_results(request, election):
     election = results.check_and_compute(election)
-    return render_to_response('view_results.html', {'election': election})
+    return render_to_response('view_results.html', {'election': election}, context_instance=RequestContext(request))
+
+def close_election(request, key, open=False):
+    election_key = key[:KEYA_LEN]
+    admin_key = key[KEYA_LEN:]
+    election = Election.objects(key=election_key)
+    if len(election)==1: # if the election was found
+        election=election[0]
+        if election.admin_key==admin_key:
+            if open: #for dev only
+                election.open=True
+                del election.closing_date
+                election.save()
+                return admin_election(request,election)
+            else:
+                election.open=False
+                election.closing_date=datetime.datetime.now()
+                election.save()
+                return view_results(request,election)
+        else:
+            raise Http404
+    else:
+        raise Http404
 
 def vote(request, election, user=None):
     #TODO: adapt to multiple systems by creating a metaForm
@@ -117,3 +139,4 @@ def about(request):
 
 def custom_404(request):
     return render_to_response('404.html')
+

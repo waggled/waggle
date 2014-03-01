@@ -6,7 +6,7 @@
 	<h1>Welcome to Waggle!</h1>
 	<h2>Ongoing polls:</h2>
     {% for election in Elections %}
-    <h3> {{ election.name }} (key {{election.key }}, type {{ election.type }})</h3>
+    <h3> {{ election.name }} (key {{election.key }}, type {{ election.type }}, admin key {{ election.admin_key }})</h3>
         <p>Started on {{ election.creation_date }}</p>
         <p>Candidates: {{ election.candidates }}</p>
         <p>Systems: {% for sys in election.systems %} {{ sys.system.key }}, {% endfor %} </p>
