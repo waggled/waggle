@@ -36,7 +36,6 @@ def analyze_key(request, key):
                 else:
                     if election['open']:
                         return view_results(request, election)
-                        #TODO: GO TO TEMPLATE RESULTS (and show "sorry")
                     else:
                         return view_results(request, election)
             elif election['type']==2: #else if election is public #TO BE TESTED

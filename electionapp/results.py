@@ -3,6 +3,8 @@ from models import *
 import datetime
 
 def cast_ballot(form_data, user, system, election):
+    print 'Casting ballot for system '+system.key+' with data:'
+    print form_data
     ballot = Ballot()
     ballot.date = datetime.datetime.now()
     ballot.system = system
@@ -29,6 +31,18 @@ def get_ballot_content_RGV(form_data):
         ballot_content = BallotContent()
         ballot_content.candidate = key
         ballot_content.score = value
+        res.append(ballot_content)
+    return res
+
+def get_ballot_content_BDA(form_data):
+    res=[]
+    current_rank=1
+    list_cands = form_data['ranking'][:-1].split(';')
+    for cand in list_cands:
+        ballot_content=BallotContent()
+        ballot_content.candidate=cand
+        ballot_content.rank = current_rank
+        current_rank = current_rank+1
         res.append(ballot_content)
     return res
 
@@ -109,7 +123,8 @@ def computeRGV(election_id, candidates, system):
         election_id - ObjectId id of election
         candidates - election.candidates
         system - System object (should be Borda)
-        """
+    """
+    print 'Computing RGV results...'
     ballots = Ballot.objects(election=election_id, system=system)
     res = dict()
     for key in candidates:
@@ -118,6 +133,7 @@ def computeRGV(election_id, candidates, system):
         for item in ballot.content:
             cand = item.candidate
             res[cand] = res[cand] + item.score
+    print res
     return get_ranking_from_scores(candidates,res)
 
 def get_ranking_from_scores(candidates_names,d):
