@@ -1,126 +1,125 @@
-<!DOCTYPE html>
-<html>
-  <head>
-        <script src="//code.jquery.com/jquery-1.9.1.js"></script>
-        <script>
-            var s_to_print = {'candidate': 'candidate', 'emailguest':'guest'};
-            $(document).ready(function () {
-                             
-                              function updateElementIndex(el, prefix, ndx) {
-                                var id_regex = new RegExp('(' + prefix + '-\\d+-)');
-                                var replacement = prefix + '-' + ndx + '-';
-                                if ($(el).attr("for")) $(el).attr("for", $(el).attr("for").replace(id_regex,replacement));
-                                if (el.id) el.id = el.id.replace(id_regex, replacement);
-                                if (el.name) el.name = el.name.replace(id_regex, replacement);
-                              }
-                              
-                              function deleteForm(btn, prefix, s) {
-                                //s = typeof s !== 'undefined' ? s : 'candidate';
-                                var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
-                                if (formCount > 1) {
-                                    // Delete the item/form
-                                    $(btn).parents('.'+s).remove();
-                                    var forms = $('.'+s); // Get all the forms
-                                    // Update the total number of forms (1 less than before)
-                                    $('#id_' + prefix + '-TOTAL_FORMS').val(forms.length);
-                                    var i = 0;
-                                    // Go through the forms and set their indices, names and IDs
-                                    for (formCount = forms.length; i < formCount; i++) {
-                                        $(forms.get(i)).children().children().each(function () {
-                                                                         if ($(this).attr('type') == 'text') updateElementIndex(this, prefix, i);
-                                                                         });
-                                    }
-                                } // End if
-                                else {
-                                    alert("You have to enter at least one "+s_to_print[s]+"!");
-                                }
-                                return false;
-                              }
-                              
-                              function addForm(btn, prefix, s) {
-                                var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
-                                // You can only submit a maximum of 10 candidates
-                                if (formCount < 10) {
-                                    // Clone a form (without event handlers) from the first form
-                                    var row = $("."+s+":first").clone(false).get(0);
-                                    // Insert it after the last form
-                                    $(row).removeAttr('id').hide().insertAfter("."+s+":last").slideDown(300);
-                              
-                                    // Remove the bits we don't want in the new row/form
-                                    // e.g. error messages
-                                    $(".errorlist", row).remove();
-                                    $(row).children().removeClass("error");
-                              
-                                    // Relabel or rename all the relevant bits
-                                    $(row).children().children().each(function () {
-                                                                updateElementIndex(this, prefix, formCount);
-                                                                $(this).val("");
-                                                                });
-                              
-                                    // Add an event handler for the delete candidate/form link
-                                    $(row).find(".delete_"+s).click(function () {
-                                                           return deleteForm(this, prefix, s);
-                                                           });
-                                    // Update the total form count
-                                    $("#id_" + prefix + "-TOTAL_FORMS").val(formCount + 1);
-                                } // End if
-                                else {
-                                    alert("Sorry, you can only enter a maximum of ten "+s_to_print[s]+"s.");
-                                }
-                                return false;
-                              }
-                              
-                              // Register the click event handlers
-                              $("#add_candidate").click(function () {
-                                                        return addForm(this, "form", 'candidate');
+{% extends "base.html" %}
+
+{% block javascript %}
+<script>
+    var s_to_print = {'candidate': 'candidate', 'emailguest':'guest'};
+    $(document).ready(function () {
+                      
+                      function updateElementIndex(el, prefix, ndx) {
+                      var id_regex = new RegExp('(' + prefix + '-\\d+-)');
+                      var replacement = prefix + '-' + ndx + '-';
+                      if ($(el).attr("for")) $(el).attr("for", $(el).attr("for").replace(id_regex,replacement));
+                      if (el.id) el.id = el.id.replace(id_regex, replacement);
+                      if (el.name) el.name = el.name.replace(id_regex, replacement);
+                      }
+                      
+                      function deleteForm(btn, prefix, s) {
+                      //s = typeof s !== 'undefined' ? s : 'candidate';
+                      var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
+                      if (formCount > 1) {
+                      // Delete the item/form
+                      $(btn).parents('.'+s).remove();
+                      var forms = $('.'+s); // Get all the forms
+                      // Update the total number of forms (1 less than before)
+                      $('#id_' + prefix + '-TOTAL_FORMS').val(forms.length);
+                      var i = 0;
+                      // Go through the forms and set their indices, names and IDs
+                      for (formCount = forms.length; i < formCount; i++) {
+                      $(forms.get(i)).children().children().each(function () {
+                                                                 if ($(this).attr('type') == 'text') updateElementIndex(this, prefix, i);
+                                                                 });
+                      }
+                      } // End if
+                      else {
+                      alert("You have to enter at least one "+s_to_print[s]+"!");
+                      }
+                      return false;
+                      }
+                      
+                      function addForm(btn, prefix, s) {
+                      var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
+                      // You can only submit a maximum of 10 candidates
+                      if (formCount < 10) {
+                      // Clone a form (without event handlers) from the first form
+                      var row = $("."+s+":first").clone(false).get(0);
+                      // Insert it after the last form
+                      $(row).removeAttr('id').hide().insertAfter("."+s+":last").slideDown(300);
+                      
+                      // Remove the bits we don't want in the new row/form
+                      // e.g. error messages
+                      $(".errorlist", row).remove();
+                      $(row).children().removeClass("error");
+                      
+                      // Relabel or rename all the relevant bits
+                      $(row).children().children().each(function () {
+                                                        updateElementIndex(this, prefix, formCount);
+                                                        $(this).val("");
                                                         });
-                              $("#add_emailguest").click(function () {
-                                                        return addForm(this, "form", 'emailguest');
-                                                        });
-                              
-                              $(".delete_candidate").click(function () {
-                                                           return deleteForm(this, "form", 'candidate');
-                                                           });
-                              $(".delete_emailguest").click(function () {
-                                                           return deleteForm(this, "form", 'emailguest');
-                                                           });
-                              
-                              });
-        </script>
-  </head> 
-  <body>
-	<h1>Create your poll!</h1>
-    <form action="{% url 'electionapp.views.create' %}" method="POST">{% csrf_token %}
-        
-        <div class='general'>
-            <h2>General information</h2>
-            {{ election_form.as_p }}
+                      
+                      // Add an event handler for the delete candidate/form link
+                      $(row).find(".delete_"+s).click(function () {
+                                                      return deleteForm(this, prefix, s);
+                                                      });
+                      // Update the total form count
+                      $("#id_" + prefix + "-TOTAL_FORMS").val(formCount + 1);
+                      } // End if
+                      else {
+                      alert("Sorry, you can only enter a maximum of ten "+s_to_print[s]+"s.");
+                      }
+                      return false;
+                      }
+                      
+                      // Register the click event handlers
+                      $("#add_candidate").click(function () {
+                                                return addForm(this, "form", 'candidate');
+                                                });
+                      $("#add_emailguest").click(function () {
+                                                 return addForm(this, "form", 'emailguest');
+                                                 });
+                      
+                      $(".delete_candidate").click(function () {
+                                                   return deleteForm(this, "form", 'candidate');
+                                                   });
+                      $(".delete_emailguest").click(function () {
+                                                    return deleteForm(this, "form", 'emailguest');
+                                                    });
+                      
+                      });
+    </script>
+{% endblock %}
+
+{% block content %}
+<h1>Create your poll!</h1>
+<form action="{% url 'electionapp.views.create' %}" method="POST">{% csrf_token %}
+    
+    <div class='general'>
+        <h2>General information</h2>
+        {{ election_form.as_p }}
+    </div>
+    <div class='candidates'>
+        <h2>Candidates</h2>
+        {{ candidate_formset.management_form }}
+        {% for form in candidate_formset.forms %}
+        <div class="candidate">
+            {{ form.as_p }}
+            <p style=""><a class="delete_candidate" href="#">Delete</a></p>
         </div>
-        <div class='candidates'>
-            <h2>Candidates</h2>
-            {{ candidate_formset.management_form }}
-            {% for form in candidate_formset.forms %}
-            <div class="candidate">
-                {{ form.as_p }}
-                <p style=""><a class="delete_candidate" href="#">Delete</a></p>
-            </div>
-            {% endfor %}
-            <p><a id="add_candidate" href="#">Add another candidate</a></p>
+        {% endfor %}
+        <p><a id="add_candidate" href="#">Add another candidate</a></p>
+    </div>
+    <div class='guests'>
+        <h2>Guests</h2>
+        {{ emailguest_formset.management_form }}
+        {% for form in emailguest_formset.forms %}
+        <div class="emailguest">
+            {{ form.as_p }}
+            <p style=""><a class="delete_emailguest" href="#">Delete</a></p>
         </div>
-        <div class='guests'>
-            <h2>Guests</h2>
-            {{ emailguest_formset.management_form }}
-            {% for form in emailguest_formset.forms %}
-            <div class="emailguest">
-                {{ form.as_p }}
-                <p style=""><a class="delete_emailguest" href="#">Delete</a></p>
-            </div>
-            {% endfor %}
-            <p><a id="add_emailguest" href="#">Add another guest</a></p>
-        </div>
-        <div class='submit'>
-            <input type="submit" value=" Submit " />
-        </div>
-    </form>
-  </body>
-</html>
+        {% endfor %}
+        <p><a id="add_emailguest" href="#">Add another guest</a></p>
+    </div>
+    <div class='submit'>
+        <input type="submit" value=" Submit " />
+    </div>
+</form>
+{% endblock %}

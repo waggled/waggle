@@ -1,13 +1,8 @@
-<!DOCTYPE html>
-<html>
-  <head>
-  </head> 
-  <body>
-	<h1>Welcome to Waggled!</h1>
-    <p><a href="{% url 'electionapp.views.create' %}">Create a poll</a></p>
-    <p><a href="{% url 'electionapp.views.systems' %}">Learn more about systems</a></p>
-    <p><a href="{% url 'electionapp.views.about' %}">About</a></p>
-    
-    
-  </body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Welcome to Waggled!</h1>
+<p><a href="{% url 'electionapp.views.create' %}">Create a poll</a></p>
+<p><a href="{% url 'electionapp.views.systems' %}">Learn more about systems</a></p>
+<p><a href="{% url 'electionapp.views.about' %}">About</a></p>
+{% endblock %}

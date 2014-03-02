@@ -1,23 +1,20 @@
-<!DOCTYPE html>
-<html>
-  <head>
-  </head> 
-  <body>
-    <h1>Results of the poll "{{election.name}}"</h1>
-    {% if election.open %}
-        <p>Sorry, this poll is still open, results are not available yet.</p>
-    {% else %}
-        <p>Results are available, this poll was closed on {{ election.closing_date }}.</p>
-        {% for result in election.results %}
-            <p> Below are the results with system {{ result.system.name }} </p>
-            <ul>
-                {% for result_ranking in result.ranking %}
-                <li>{{ result_ranking.rank }}: {{ result_ranking.candidate }} with score {{ result_ranking.score }} </li>
-                {% endfor %}
-            </ul>
-        {% empty %}
-            <p>Weird... no result has been sent to this template.</p>
-        {% endfor %}
-    {% endif %}
-  </body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Results of the poll "{{election.name}}"</h1>
+{% if election.open %}
+<p>Sorry, this poll is still open, results are not available yet.</p>
+{% else %}
+<p>Results are available, this poll was closed on {{ election.closing_date }}.</p>
+{% for result in election.results %}
+<p> Below are the results with system {{ result.system.name }} </p>
+<ul>
+    {% for result_ranking in result.ranking %}
+    <li>{{ result_ranking.rank }}: {{ result_ranking.candidate }} with score {{ result_ranking.score }} </li>
+    {% endfor %}
+</ul>
+{% empty %}
+<p>Weird... no result has been sent to this template.</p>
+{% endfor %}
+{% endif %}
+{% endblock %}

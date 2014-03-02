@@ -1,66 +1,66 @@
-<!DOCTYPE html>
-<html>
-  <head>
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
-  <script src="//code.jquery.com/jquery-1.9.1.js"></script>
-  <script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
-  <style>
-  #sortable { list-style-type: none; margin: 0; padding: 0; width: 60%; }
-  #sortable li { margin: 0 3px 3px 3px; padding: 0.4em; padding-left: 1.5em; font-size: 1.4em; height: 18px; }
-  #sortable li span { position: absolute; margin-left: -1.3em; }
-  </style>
-  <script>
-    $(function() {
-      $('#sortable').sortable({
-        update: function(event, ui) {
-                              var rkg = '';
-                              $('.ui-state-default').each(function(){
-                                                            rkg = rkg + $(this).attr('id')+';';
-                                                          })
-                              $('#id_ranking').attr('value',rkg);
-        }
-      });
-      $( "#sortable" ).disableSelection();
-    });
-    </script>
-  </head> 
-  <body>
-	<h1>Here you vote!</h1>
-    
-    {% if show_edit %}
-        <p>Please edit your vote</p>
-    {% endif %}
-    
-    {% if show_already_voted %}
-        <p>You voted already!</p>
-        <form action="{% url 'electionapp.views.edit_vote' election.key|add:user_key %}" method='get'>{% csrf_token %}
-            <input type='submit' value='Edit your vote' />
-        </form>
-    {% endif %}
-    
-    {% if form %}
-        {{ form.errors }}
-    {% endif %}
-    
-    {% if show_vote_cast %}
-        Your vote has been cast all right!
-    {% endif %}
-    
-    {% if show_form %}
-        {% if form.requires_ranking %}
-        <p>Please rank candidates.</p>
-        <ul id="sortable">
-            {% for choice in form.choices %}
-            <li class="ui-state-default" id="{{ choice.0 }}"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>{{ choice.1 }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-        <form action="{% url 'electionapp.views.analyze_key' election.key|add:user_key %}" method='post'>{% csrf_token %}
-            {{ form.as_p }}
-            <input type='submit' value='Submit' />
-        </form>
-    {% endif %}
-    
+{% extends "base.html" %}
 
-  </body>
-</html>
+{% block style %}
+<link rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+    <style>
+        #sortable { list-style-type: none; margin: 0; padding: 0; width: 60%; }
+        #sortable li { margin: 0 3px 3px 3px; padding: 0.4em; padding-left: 1.5em; font-size: 1.4em; height: 18px; }
+        #sortable li span { position: absolute; margin-left: -1.3em; }
+        </style>
+{% endblock %}
+
+{% block javascript %}
+    <script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+    <script>
+        $(function() {
+          $('#sortable').sortable({
+                                  update: function(event, ui) {
+                                  var rkg = '';
+                                  $('.ui-state-default').each(function(){
+                                                              rkg = rkg + $(this).attr('id')+';';
+                                                              })
+                                  $('#id_ranking').attr('value',rkg);
+                                  }
+                                  });
+          $( "#sortable" ).disableSelection();
+          });
+        </script>
+{% endblock %}
+
+{% block content %}
+<h1>Here you vote!</h1>
+
+{% if show_edit %}
+<p>Please edit your vote</p>
+{% endif %}
+
+{% if show_already_voted %}
+<p>You voted already!</p>
+<form action="{% url 'electionapp.views.edit_vote' election.key|add:user_key %}" method='get'>{% csrf_token %}
+    <input type='submit' value='Edit your vote' />
+</form>
+{% endif %}
+
+{% if form %}
+{{ form.errors }}
+{% endif %}
+
+{% if show_vote_cast %}
+Your vote has been cast all right!
+{% endif %}
+
+{% if show_form %}
+{% if form.requires_ranking %}
+<p>Please rank candidates.</p>
+<ul id="sortable">
+    {% for choice in form.choices %}
+    <li class="ui-state-default" id="{{ choice.0 }}"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>{{ choice.1 }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+<form action="{% url 'electionapp.views.analyze_key' election.key|add:user_key %}" method='post'>{% csrf_token %}
+    {{ form.as_p }}
+    <input type='submit' value='Submit' />
+</form>
+{% endif %}
+{% endblock %}
