@@ -21,8 +21,8 @@ class EmailGuestForm(forms.Form):
 
 class ElectionForm(forms.Form):
     name = forms.CharField(min_length=2, max_length=140, required=True, label='Name of the poll')
-    message = forms.CharField(min_length=0, max_length=1000, label='Message to the voters', required=False)
-    type = forms.ChoiceField(choices=[(1,'Only guests are allowed to vote'),(2,'Anyone can vote any number of times')], widget=forms.RadioSelect, required=True, label='Voting mode')
+    message = forms.CharField(min_length=0, max_length=1000, label='Message to the voters', required=False, widget=forms.Textarea)
+    type = forms.ChoiceField(choices=[(1,'Only guests are allowed to vote. You will invite them by email.'),(2,'You invite people with an url that anyone can use as many times as one wants.')], widget=forms.RadioSelect, required=True, label='Voting mode')
     system = forms.ChoiceField(choices=[(s.key,s.name) for s in System.objects.all()], required=True)
 
 class BallotForm(forms.Form):
