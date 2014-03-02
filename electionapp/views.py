@@ -163,8 +163,8 @@ def create(request):
             return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset}, context_instance=RequestContext(request))
     else: # GET
         election_form = ElectionForm()
-        candidate_formset = CandidateFormSet()
-        emailguest_formset = EmailGuestFormSet()
+        candidate_formset = CandidateFormSet(prefix='candidate')
+        emailguest_formset = EmailGuestFormSet(prefix='emailguest')
         return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset}, context_instance=RequestContext(request))
 
 def systems(request):

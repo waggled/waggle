@@ -71,17 +71,17 @@
                       
                       // Register the click event handlers
                       $("#add_candidate").click(function () {
-                                                return addForm(this, "form", 'candidate');
+                                                return addForm(this, 'candidate', 'candidate');
                                                 });
                       $("#add_emailguest").click(function () {
-                                                 return addForm(this, "form", 'emailguest');
+                                                 return addForm(this, 'emailguest', 'emailguest');
                                                  });
                       
                       $(".delete_candidate").click(function () {
-                                                   return deleteForm(this, "form", 'candidate');
+                                                   return deleteForm(this, 'candidate', 'candidate');
                                                    });
                       $(".delete_emailguest").click(function () {
-                                                    return deleteForm(this, "form", 'emailguest');
+                                                    return deleteForm(this, 'emailguest', 'emailguest');
                                                     });
                       
                       });
