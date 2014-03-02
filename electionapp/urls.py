@@ -9,6 +9,7 @@ urlpatterns = patterns('electionapp.views',
 	url(r'^account/$', 	'account'),
     url(r'^(\w+)/$', 'analyze_key'),
     url(r'^(\w+)/close/$', 'close_election'),
-                       url(r'^(\w+)/close/(\w+)$', 'close_election'), #dev only
+    url(r'^(\w+)/edit/$', 'edit_vote'),
+    url(r'^(\w+)/close/(\w+)$', 'close_election'), #dev only
     url(r'^vote/$', 'vote'),
 )

@@ -27,23 +27,36 @@
   <body>
 	<h1>Here you vote!</h1>
     
-    {{ form.errors }}
+    {% if form %}
+        {{ form.errors }}
+    {% endif %}
     
     {% if send %}
         Your vote has been cas all right!
     {% else %}
-        {% if form.requires_ranking %}
-            <p>Please rank candidates.</p>
-            <ul id="sortable">
-                {% for choice in form.choices %}
-                <li class="ui-state-default" id="{{ choice.0 }}"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>{{ choice.1 }}</li>
-                {% endfor %}
-            </ul>
+        {% if already_voted %}
+            {% if edit_vote %}
+                <p>Please edit your vote</p>
+            {% else %}
+                <p>You voted already!</p>
+                <form action="{% url 'electionapp.views.edit_vote' election.key|add:user_key %}" method='post'>{% csrf_token %}
+                    <input type='submit' value='Edit your vote' />
+                </form>
+            {% endif %}
+        {% else %}
+            {% if form.requires_ranking %}
+                <p>Please rank candidates.</p>
+                <ul id="sortable">
+                    {% for choice in form.choices %}
+                    <li class="ui-state-default" id="{{ choice.0 }}"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>{{ choice.1 }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <form action="{% url 'electionapp.views.analyze_key' election.key|add:user_key %}" method='post'>{% csrf_token %}
+                {{ form.as_p }}
+                <input type='submit' value='Submit' />
+            </form>
         {% endif %}
-        <form action="{% url 'electionapp.views.analyze_key' election.key %}" method='post'>{% csrf_token %}
-            {{ form.as_p }}
-            <input type='submit' value='Submit' />
-        </form>
     {% endif %}
 
   </body>

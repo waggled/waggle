@@ -26,11 +26,14 @@ def analyze_key(request, key):
                         return admin_election(request, election)
                     else:
                         if keyB in election['guests']: #if keyB is a guest key
-                            ballots = Ballot.objects(election=election, user=election['guests'][keyB])
-                            if ballots.count()==0: #TODO : distinguish
-                                return vote(request, election, election['guests'][keyB])
+                            if election['open']:
+                                ballots = Ballot.objects(election=election, user=election['guests'][keyB])
+                                if ballots.count()==0: #TODO : distinguish
+                                    return vote(request, election, user=election['guests'][keyB], user_key=keyB)
+                                else:
+                                    return vote(request, election, user=election['guests'][keyB], user_key=keyB, already_voted=True)
                             else:
-                                return vote(request, election, election['guests'][keyB])
+                                return view_results(request, election)
                         else:
                             raise Http404
                 else:
@@ -69,6 +72,7 @@ def view_results(request, election):
     return render_to_response('view_results.html', {'election': election}, context_instance=RequestContext(request))
 
 def close_election(request, key, open=False):
+    #TODO : check if keys are ok here (important)
     election_key = key[:KEYA_LEN]
     admin_key = key[KEYA_LEN:]
     election = Election.objects(key=election_key)
@@ -90,35 +94,60 @@ def close_election(request, key, open=False):
     else:
         raise Http404
 
-def vote(request, election, user=None):
+def edit_vote(request,key):
+    election_key = key[:KEYA_LEN]
+    user_key = key[KEYA_LEN:]
+    election = Election.objects(key=election_key)
+    if len(election)==1: # if the election was found
+        election=election[0]
+        if user_key in election['guests']:
+            if election['open']:
+                ballots = Ballot.objects(election=election, user=election['guests'][user_key])
+                if ballots.count()==0: #TODO : distinguish
+                    raise Http404
+                else:
+                    return vote(request, election, user=election['guests'][user_key], user_key=user_key, already_voted=True, edit_vote=True)
+            else:
+                return view_results(request, election)
+        else:
+            raise Http404
+    else:
+        raise Http404
+
+def vote(request, election, user=None, user_key='', already_voted=False, edit_vote=False):
     #TODO: adapt to multiple systems by creating a metaForm
     my_choices = []
     for key, value in election.candidates.items():
         my_choices.append((key,value))
     if request.method == 'POST':
-        for election_system in election.systems:
-            method_name = election_system.system.key + 'BallotForm'
-            method = globals()[method_name]
-            form = method(request.POST, choices=my_choices, custom=election_system.custom)
-        if form.is_valid():
-            if user==None:
-                try:
-                    ip = request.META['HTTP_X_FORWARDED_FOR']
-                except KeyError:
-                    ip = request.META['REMOTE_ADDR']
-                user = User(ip=ip, type=9)
-                user.save()
-            results.cast_ballot(form.cleaned_data, user, election.systems[0].system, election)
-            return render_to_response('voting_page.html', {'form':form, 'send':True, 'election':election}, context_instance=RequestContext(request))
+        if already_voted:
+            #TODO : load previous ballots and put it in form variable
+            return render_to_response('voting_page.html', {'form':None, 'send':False, 'election':election, 'user_key':user_key, 'already_voted':already_voted, 'edit_vote':edit_vote}, context_instance=RequestContext(request))
         else:
-            return render_to_response('voting_page.html', {'form':form, 'send':False, 'election':election}, context_instance=RequestContext(request))
+            for election_system in election.systems:
+                method_name = election_system.system.key + 'BallotForm'
+                method = globals()[method_name]
+                form = method(request.POST, choices=my_choices, custom=election_system.custom)
+            if form.is_valid():
+                if user==None:
+                    try:
+                        ip = request.META['HTTP_X_FORWARDED_FOR']
+                    except KeyError:
+                        ip = request.META['REMOTE_ADDR']
+                    user = User(ip=ip, type=9)
+                    user.save()
+                results.cast_ballot(form.cleaned_data, user, election.systems[0].system, election)
+                return render_to_response('voting_page.html', {'form':form, 'send':True, 'election':election, 'user_key':user_key, 'already_voted':already_voted, 'edit_vote':edit_vote}, context_instance=RequestContext(request))
+            else:
+                return render_to_response('voting_page.html', {'form':form, 'send':False, 'election':election, 'user_key':user_key, 'already_voted':already_voted, 'edit_vote':edit_vote}, context_instance=RequestContext(request))
+
     else: # GET
         ballotForms=[]
         for election_system in election.systems:
             method_name = election_system.system.key + 'BallotForm'
             method = globals()[method_name]
             ballotForms.append(method(choices=my_choices, custom=election_system.custom))
-        return render_to_response('voting_page.html', {'form':ballotForms[0], 'send':False, 'election':election}, context_instance=RequestContext(request))
+        return render_to_response('voting_page.html', {'form':ballotForms[0], 'send':False, 'election':election, 'user_key':user_key, 'already_voted':already_voted, 'edit_vote':edit_vote}, context_instance=RequestContext(request))
 
 def create(request):
 	return render_to_response('create.html')
