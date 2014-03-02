@@ -39,10 +39,6 @@ class ElectionSystem(EmbeddedDocument):
     custom = DictField()
 
 class Election(Document):
-    def __init__(self, *args, **kwargs):
-        super(Election, self).__init__(*args, **kwargs)
-        self.creation_date=datetime.datetime.now()
-        self.open=True
     key = StringField(max_length=16, required=True)
     type = IntField(required=True)
     admin_key = StringField(max_length=8, required=True)
