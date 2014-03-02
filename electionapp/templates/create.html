@@ -4,6 +4,9 @@
   </head> 
   <body>
 	<h1>Create your poll!</h1>
-	<p>There will be a form here.</p>
+    <form action="{% url 'electionapp.views.create' %}" method='post'>{% csrf_token %}
+        {{ form.as_p }}
+        <input type='submit' value='Submit' />
+    </form>
   </body>
 </html>

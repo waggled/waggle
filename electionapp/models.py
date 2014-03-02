@@ -4,6 +4,7 @@ import sys
 sys.path.append(os.path.abspath('..'))
 from waggle.settings import DBNAME
 import datetime
+import tools
 
 connect(DBNAME)
 
@@ -38,6 +39,10 @@ class ElectionSystem(EmbeddedDocument):
     custom = DictField()
 
 class Election(Document):
+    def __init__(self, *args, **kwargs):
+        self.creation_date=datetime.datetime.now()
+        self.key = tools.get_new_election_key()
+        self.open=True
     key = StringField(max_length=16, required=True)
     type = IntField(required=True)
     admin_key = StringField(max_length=8, required=True)

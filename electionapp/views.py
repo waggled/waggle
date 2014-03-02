@@ -150,7 +150,11 @@ def vote(request, election, user=None, user_key='', already_voted=False, edit_vo
         return render_to_response('voting_page.html', {'form':ballotForms[0], 'send':False, 'election':election, 'user_key':user_key, 'show_already_voted':already_voted and not edit_vote, 'show_form':not already_voted, 'show_edit':edit_vote, 'show_vote_cast':False}, context_instance=RequestContext(request))
 
 def create(request):
-	return render_to_response('create.html')
+    if request.method == 'POST':
+        print 'Hey' #TODO
+    else: # GET
+        form = ElectionForm()
+        return render_to_response('create.html', {'form':form}, context_instance=RequestContext(request))
 
 def systems(request):
     systems = System.objects

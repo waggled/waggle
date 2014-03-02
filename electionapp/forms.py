@@ -1,6 +1,15 @@
 #-*- coding: utf-8 -*-
 from django import forms
 
+class ElectionForm(forms.Form):
+    name = forms.CharField(min_length=2, max_length=140, required=True, label='Name of the poll')
+    message = forms.CharField(min_length=0, max_length=1000, label='Message to the voters')
+    type = forms.ChoiceField(choices=[(1,'Only guests are allowed to vote'),(2,'Anyone can vote any number of times')], widget=forms.RadioSelect, required=True, label='Voting mode')
+    #open
+    #candidates
+    #systems
+    #guests
+
 class BallotForm(forms.Form):
     def __init__(self, *args, **kwargs):
         choices = kwargs.pop('choices', None)
