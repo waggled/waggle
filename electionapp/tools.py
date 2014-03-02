@@ -1,6 +1,9 @@
 #-*- coding: utf-8 -*-
 from electionapp.settings import *
+import uuid
 
 def get_new_election_key():
-    #TODO : use KEYA_LEN et KEYB_LEN
-    return 'aaaaaaaa11111111'
+    return str(uuid.uuid4()).replace('-','')[:KEYA_LEN]
+
+def get_new_guest_key():
+    return str(uuid.uuid4()).replace('-','')[:KEYB_LEN]
