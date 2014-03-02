@@ -42,7 +42,6 @@ class Election(Document):
     def __init__(self, *args, **kwargs):
         super(Election, self).__init__(*args, **kwargs)
         self.creation_date=datetime.datetime.now()
-        self.key = tools.get_new_election_key()
         self.open=True
     key = StringField(max_length=16, required=True)
     type = IntField(required=True)
