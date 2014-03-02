@@ -1,14 +1,29 @@
 #-*- coding: utf-8 -*-
 from django import forms
+from models import *
+from django.forms.formsets import BaseFormSet
+
+class RequiredFormSet(BaseFormSet):
+    def __init__(self, *args, **kwargs):
+        super(RequiredFormSet, self).__init__(*args, **kwargs)
+        for form in self.forms:
+            form.empty_permitted = False
+
+class RGVCustomForm(forms.Form): #TODO : use RangeField and RangeWidget
+    min = forms.IntegerField() #TODO : handle dynamically 'required' argument
+    max = forms.IntegerField()
+
+class CandidateForm(forms.Form):
+    name = forms.CharField(min_length=1,max_length=140, required=True)
+
+class EmailGuestForm(forms.Form):
+    email = forms.EmailField(required=True)
 
 class ElectionForm(forms.Form):
     name = forms.CharField(min_length=2, max_length=140, required=True, label='Name of the poll')
-    message = forms.CharField(min_length=0, max_length=1000, label='Message to the voters')
+    message = forms.CharField(min_length=0, max_length=1000, label='Message to the voters', required=False)
     type = forms.ChoiceField(choices=[(1,'Only guests are allowed to vote'),(2,'Anyone can vote any number of times')], widget=forms.RadioSelect, required=True, label='Voting mode')
-    #open
-    #candidates
-    #systems
-    #guests
+    system = forms.ChoiceField(choices=[(s.key,s.name) for s in System.objects.all()], required=True)
 
 class BallotForm(forms.Form):
     def __init__(self, *args, **kwargs):

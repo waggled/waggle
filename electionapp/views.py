@@ -2,6 +2,7 @@
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.http import HttpResponse, Http404
+from django.forms.formsets import formset_factory
 from models import *
 import results
 import datetime
@@ -150,11 +151,21 @@ def vote(request, election, user=None, user_key='', already_voted=False, edit_vo
         return render_to_response('voting_page.html', {'form':ballotForms[0], 'send':False, 'election':election, 'user_key':user_key, 'show_already_voted':already_voted and not edit_vote, 'show_form':not already_voted, 'show_edit':edit_vote, 'show_vote_cast':False}, context_instance=RequestContext(request))
 
 def create(request):
+    CandidateFormSet = formset_factory(CandidateForm, max_num=10, formset=RequiredFormSet) #TODO: make max_num a settings.py parameter (caution, 10 is used in js too)
+    EmailGuestFormSet = formset_factory(EmailGuestForm, max_num=10, formset=RequiredFormSet) #TODO: idem
     if request.method == 'POST':
-        print 'Hey' #TODO
+        election_form = ElectionForm(request.POST)
+        candidate_formset = CandidateFormSet(request.POST, request.FILES)
+        emailguest_formset = EmailGuestFormSet(request.POST, request.FILES)
+        if election_form.is_valid() and candidate_formset.is_valid() and emailguest_formset.is_valid():
+            return HttpResponse('thanks') #TODO
+        else:
+            return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset}, context_instance=RequestContext(request))
     else: # GET
-        form = ElectionForm()
-        return render_to_response('create.html', {'form':form}, context_instance=RequestContext(request))
+        election_form = ElectionForm()
+        candidate_formset = CandidateFormSet()
+        emailguest_formset = EmailGuestFormSet()
+        return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset}, context_instance=RequestContext(request))
 
 def systems(request):
     systems = System.objects
