@@ -9,9 +9,12 @@ from electionapp.settings import *
 from electionapp.forms import *
 import time
 
-def index(request):
+def polls_overview(request):
 	elections = Election.objects
-	return render_to_response('index.html', {'Elections': elections})
+	return render_to_response('polls.html', {'Elections': elections})
+
+def index(request):
+	return render_to_response('index.html')
 
 def analyze_key(request, key):
     if len(key) >= KEYA_LEN: #if key is long enough to identify a keyA
@@ -120,34 +123,31 @@ def vote(request, election, user=None, user_key='', already_voted=False, edit_vo
     for key, value in election.candidates.items():
         my_choices.append((key,value))
     if request.method == 'POST':
-        if already_voted:
-            #TODO : load previous ballots and put it in form variable
-            return render_to_response('voting_page.html', {'form':None, 'send':False, 'election':election, 'user_key':user_key, 'already_voted':already_voted, 'edit_vote':edit_vote}, context_instance=RequestContext(request))
+        for election_system in election.systems:
+            method_name = election_system.system.key + 'BallotForm'
+            method = globals()[method_name]
+            form = method(request.POST, choices=my_choices, custom=election_system.custom)
+        if form.is_valid():
+            if user==None:
+                try:
+                    ip = request.META['HTTP_X_FORWARDED_FOR']
+                except KeyError:
+                    ip = request.META['REMOTE_ADDR']
+                user = User(ip=ip, type=9)
+                user.save()
+            results.cast_ballot(form.cleaned_data, user, election.systems[0].system, election)
+            return render_to_response('voting_page.html', {'form':form, 'send':True, 'election':election, 'user_key':user_key, 'show_already_voted':False, 'show_form':False, 'show_edit':edit_vote, 'show_vote_cast':True}, context_instance=RequestContext(request))
         else:
-            for election_system in election.systems:
-                method_name = election_system.system.key + 'BallotForm'
-                method = globals()[method_name]
-                form = method(request.POST, choices=my_choices, custom=election_system.custom)
-            if form.is_valid():
-                if user==None:
-                    try:
-                        ip = request.META['HTTP_X_FORWARDED_FOR']
-                    except KeyError:
-                        ip = request.META['REMOTE_ADDR']
-                    user = User(ip=ip, type=9)
-                    user.save()
-                results.cast_ballot(form.cleaned_data, user, election.systems[0].system, election)
-                return render_to_response('voting_page.html', {'form':form, 'send':True, 'election':election, 'user_key':user_key, 'already_voted':already_voted, 'edit_vote':edit_vote}, context_instance=RequestContext(request))
-            else:
-                return render_to_response('voting_page.html', {'form':form, 'send':False, 'election':election, 'user_key':user_key, 'already_voted':already_voted, 'edit_vote':edit_vote}, context_instance=RequestContext(request))
+            return render_to_response('voting_page.html', {'form':form, 'send':False, 'election':election, 'user_key':user_key, 'show_already_voted':False, 'show_form':True, 'show_edit':edit_vote, 'show_vote_cast':False}, context_instance=RequestContext(request))
 
     else: # GET
         ballotForms=[]
+        #TODO : load previous ballots and put it in form variable
         for election_system in election.systems:
             method_name = election_system.system.key + 'BallotForm'
             method = globals()[method_name]
             ballotForms.append(method(choices=my_choices, custom=election_system.custom))
-        return render_to_response('voting_page.html', {'form':ballotForms[0], 'send':False, 'election':election, 'user_key':user_key, 'already_voted':already_voted, 'edit_vote':edit_vote}, context_instance=RequestContext(request))
+        return render_to_response('voting_page.html', {'form':ballotForms[0], 'send':False, 'election':election, 'user_key':user_key, 'show_already_voted':already_voted and not edit_vote, 'show_form':not already_voted, 'show_edit':edit_vote, 'show_vote_cast':False}, context_instance=RequestContext(request))
 
 def create(request):
 	return render_to_response('create.html')

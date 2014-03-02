@@ -3,19 +3,11 @@
   <head>
   </head> 
   <body>
-	<h1>Welcome to Waggle!</h1>
-	<h2>Ongoing polls:</h2>
-    {% for election in Elections %}
-    <h3> {{ election.name }} (key {{election.key }}, type {{ election.type }}, admin key {{ election.admin_key }})</h3>
-        <p>Started on {{ election.creation_date }}</p>
-        <p>Candidates: {{ election.candidates }}</p>
-        Guests: {{election.guests}}
-        <p>Systems: {% for sys in election.systems %} {{ sys.system.key }}, {% endfor %} </p>
-        {% if election.open %}
-            <p>Still open.</p>
-        {% else %}
-            <p>Closed on {{ election.closing_date }} </p>
-        {% endif %}
-    {% endfor %}
+	<h1>Welcome to Waggled!</h1>
+    <p><a href="{% url 'electionapp.views.create' %}">Create a poll</a></p>
+    <p><a href="{% url 'electionapp.views.systems' %}">Learn more about systems</a></p>
+    <p><a href="{% url 'electionapp.views.about' %}">About</a></p>
+    
+    
   </body>
 </html>
