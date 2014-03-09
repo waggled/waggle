@@ -13,6 +13,22 @@
     <script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
     <script>
         $(function() {
+          
+          function setRanking(rkg) {
+            var arr = rkg.split(';');
+            arr.pop()
+            for(var i=arr.length-1; i>=0; i--) {
+                $('#'+arr[i]).prependTo($('#sortable'));
+            }
+          }
+          
+          $(window).load(function(event) {
+                         var rkg = $('#id_ranking').attr('value');
+                         if(rkg!=''){
+                            setRanking(rkg);
+                         }
+                         });
+          
           $('#sortable').sortable({
                                   update: function(event, ui) {
                                   var rkg = '';

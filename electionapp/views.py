@@ -152,7 +152,6 @@ def vote(request, election, user=None, user_key='', already_voted=False, edit_vo
 
     else: # GET
         ballotForms=[]
-        #TODO : load previous ballots and put it in form variable
         if edit_vote:
             for election_system in election.systems:
                 ballot = Ballot.objects(system=election_system.system, election=election, user=user)[0]

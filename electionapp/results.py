@@ -30,6 +30,21 @@ def get_form_data_FPP(ballot_content):
     form_data['candidates'] = ballot_content[0]['candidate']
     return form_data
 
+def get_form_data_BDA(ballot_content):
+    s = ''
+    d_ranks = dict()
+    for item in ballot_content:
+        d_ranks[item.rank] = item.candidate
+    for item in sorted(d_ranks.items()):
+        s=s+item[1]+';'
+    return {'ranking':s}
+
+def get_form_data_RGV(ballot_content):
+    form_data = dict()
+    for item in ballot_content:
+        form_data[item.candidate] = int(item.score)
+    return form_data
+
 def get_ballot_content_RGV(form_data):
     res = []
     for key,value in form_data.items():
