@@ -6,6 +6,8 @@
 <script>
     $(function() {
       $(window).load(function(event) {
+                     $('.guests').hide();
+                     
                      var key = $('#id_election-system').val();
                      if(key=='RGV'){
                      $('#RGV-slider').show()
@@ -22,16 +24,29 @@
       $('#id_election-system').change(function(event) {
                                       var key = $('#id_election-system').val();
                                       if(key=='RGV'){
-                                        $('#RGV-slider').show()
-                                        $('#id_RGV_custom-min').attr('required',true)
-                                        $('#id_RGV_custom-max').attr('required',true)
+                                      $('#RGV-slider').show()
+                                      $('#id_RGV_custom-min').attr('required',true)
+                                      $('#id_RGV_custom-max').attr('required',true)
                                       }
                                       else{
-                                        $('#RGV-slider').hide()
-                                        $('#id_RGV_custom-min').attr('required',false)
-                                        $('#id_RGV_custom-max').attr('required',false)
+                                      $('#RGV-slider').hide()
+                                      $('#id_RGV_custom-min').attr('required',false)
+                                      $('#id_RGV_custom-max').attr('required',false)
                                       }
-                        });
+                                      });
+      
+      $('#id_election-type').change(function(event) {
+                                   
+                                      var type =  $('input[name=election-type]:checked').val();
+                                    if(type==1){
+                                        $('.guests').show();
+                                      }
+                                      else{
+                                        $('.guests').hide();
+                                      }
+                                      });
+      
+      
     });
     
 </script>
