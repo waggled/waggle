@@ -9,6 +9,7 @@ import datetime
 from electionapp.settings import *
 from electionapp.forms import *
 import time
+import tools
 
 def polls_overview(request):
 	elections = Election.objects
@@ -154,18 +155,98 @@ def create(request):
     CandidateFormSet = formset_factory(CandidateForm, max_num=10, formset=RequiredFormSet) #TODO: make max_num a settings.py parameter (caution, 10 is used in js too)
     EmailGuestFormSet = formset_factory(EmailGuestForm, max_num=10, formset=RequiredFormSet) #TODO: idem
     if request.method == 'POST':
-        election_form = ElectionForm(request.POST)
-        candidate_formset = CandidateFormSet(request.POST, request.FILES)
-        emailguest_formset = EmailGuestFormSet(request.POST, request.FILES)
-        if election_form.is_valid() and candidate_formset.is_valid() and emailguest_formset.is_valid():
-            return HttpResponse('thanks') #TODO
+        election_form = ElectionForm(request.POST, request.FILES, prefix='election')
+        creator_form = CreatorForm(request.POST, request.FILES, prefix='creator')
+        candidate_formset = CandidateFormSet(request.POST, request.FILES, prefix='candidate')
+        emailguest_formset = EmailGuestFormSet(request.POST, request.FILES, prefix='emailguest')
+        if election_form.is_valid() and candidate_formset.is_valid() and emailguest_formset.is_valid() and creator_form.is_valid():
+            print 'Forms are valid.'
+            election_form = election_form.cleaned_data
+            creator_form = creator_form.cleaned_data
+            # Create election
+            new_election = Election()
+            new_election.admin_key = tools.get_new_guest_key()
+            new_election.key = tools.get_new_election_key()
+            new_election.creation_date = datetime.datetime.now()
+            new_election.open = True
+            new_election.name = election_form['name']
+            new_election.message = election_form['message']
+            new_election.type = election_form['type']
+            election_system = ElectionSystem()
+            election_system.system = System.objects(key=election_form['system'])[0]
+            election_systems = []
+            election_systems.append(election_system) #TODO : change because this will only work for FPP
+            new_election.systems = election_systems
+            #CANDIDATES
+            d_candidates = dict()
+            k = 1
+            for candidate_form in candidate_formset:
+                candidate_form = candidate_form.cleaned_data
+                d_candidates[str(k)] = candidate_form['name']
+                k = k+1
+            new_election.candidates = d_candidates
+            print new_election
+            new_election.save()
+            #GUESTS
+            d_guests = dict()
+            for emailguest_form in emailguest_formset:
+                emailguest_form = emailguest_form.cleaned_data
+                matching_emails = User.objects(email=emailguest_form['email'])
+                if matching_emails.count()==0:
+                    user = User()
+                    user.type = 2
+                    user.email = emailguest_form['email']
+                    user.invited_to = [new_election]
+                
+                else:
+                    user = matching_emails[0]
+                    if not user.invited_to is None:
+                        user.invited_to.append(new_election)
+                    else:
+                        user.invited_to = [new_election]
+                user.save()
+                d_guests[tools.get_new_guest_key()] = user
+            new_election.guests = d_guests
+            #RESULTS
+            new_election.results = []
+            for election_system in new_election.systems:
+                result = Result()
+                result.system = System.objects(key=election_system.system.key)[0]
+                result.up_to_date = False
+                result.date = datetime.datetime.now()
+                result.save()
+                new_election.results.append(result)
+            new_election.save()
+            #Create admin user
+            if 'email' in creator_form.keys():
+                matching_admin = User.objects(email = creator_form['email'])
+                if matching_admin.count()==0:
+                    admin = User()
+                    admin.type = 2
+                    if not creator_form['email'] is None:
+                        admin.email = creator_form['email']
+                    try:
+                        ip = request.META['HTTP_X_FORWARDED_FOR']
+                    except KeyError:
+                        ip = request.META['REMOTE_ADDR']
+                    admin.ip = ip
+                    admin.admin_of = [new_election]
+                else:
+                    admin = matching_admin[0]
+                    if not admin.admin_of is None:
+                        admin.admin_of.append(new_election)
+                    else:
+                        admin.admin_of = [new_election]
+                admin.save()
+            return render_to_response('create.html', {'success':True})
         else:
             return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset}, context_instance=RequestContext(request))
     else: # GET
-        election_form = ElectionForm()
+        election_form = ElectionForm(prefix='election')
+        creator_form = CreatorForm(prefix='creator')
         candidate_formset = CandidateFormSet(prefix='candidate')
         emailguest_formset = EmailGuestFormSet(prefix='emailguest')
-        return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset}, context_instance=RequestContext(request))
+        return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset, 'creator_form':creator_form}, context_instance=RequestContext(request))
 
 def systems(request):
     systems = System.objects

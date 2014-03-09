@@ -89,6 +89,9 @@
 {% endblock %}
 
 {% block content %}
+{% if success %}
+    <p> Congratulations, your poll has been created!</p>
+{% else %}
 <h1>Create your poll!</h1>
 <form action="{% url 'electionapp.views.create' %}" method="POST">{% csrf_token %}
     
@@ -118,8 +121,13 @@
         {% endfor %}
         <p><a id="add_emailguest" href="#">Add another guest</a></p>
     </div>
+    <div class='creator'>
+        <h2>You</h2>
+        {{ creator_form.as_p }}
+    </div>
     <div class='submit'>
         <input type="submit" value=" Submit " />
     </div>
 </form>
+{% endif %}
 {% endblock %}

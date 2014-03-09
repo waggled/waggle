@@ -66,7 +66,7 @@ class User(Document):
     voted_in = ListField(ReferenceField(Election))
     admin_of = ListField(ReferenceField(Election))
     name = StringField(max_length=255)
-    ip = StringField(max_length=20, required=True)
+    ip = StringField(max_length=20)
     date = DateTimeField(required=True)
 
 # BALLOTS
