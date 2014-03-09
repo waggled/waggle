@@ -22,10 +22,22 @@
             }
           }
           
+          function setHiddenRanking() {
+            var rkg = '';
+            $('li').each(function() {
+                                    rkg=rkg+$(this).attr('id')+';';
+                                   });
+            $('#id_ranking').attr('value',rkg);
+          }
+          
+          
           $(window).load(function(event) {
                          var rkg = $('#id_ranking').attr('value');
-                         if(rkg!=''){
+                         if(rkg!=null){
                             setRanking(rkg);
+                         }
+                         else{
+                            setHiddenRanking();
                          }
                          });
           

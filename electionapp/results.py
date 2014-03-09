@@ -3,8 +3,6 @@ from models import *
 import datetime
 
 def cast_ballot(form_data, user, system, election):
-    print 'Casting ballot for system '+system.key+' with data:'
-    print form_data
     ballot = Ballot()
     ballot.date = datetime.datetime.now()
     ballot.system = system
@@ -14,6 +12,8 @@ def cast_ballot(form_data, user, system, election):
     method = globals()[method_name]
     ballot.content = method(form_data)
     ballot.save()
+    user.voted_in.append(election)
+    user.update(set__voted_in=user.voted_in)
     for result in election.results:
         if result.system == system:
             result.up_to_date = False
