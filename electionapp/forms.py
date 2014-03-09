@@ -10,8 +10,8 @@ class RequiredFormSet(BaseFormSet):
             form.empty_permitted = False
 
 class RGVCustomForm(forms.Form):
-    min = forms.IntegerField(required=False, widget=forms.HiddenInput(), initial=0) #TODO : handle dynamically 'required' argument
-    max = forms.IntegerField(required=False, widget=forms.HiddenInput(), initial=20)
+    min = forms.IntegerField(required=False, initial=0, widget=forms.HiddenInput()) #TODO : handle dynamically 'required' argument
+    max = forms.IntegerField(required=False, initial=20, widget=forms.HiddenInput())
 
 class FPPCustomForm(forms.Form):
     useless = forms.IntegerField(required=False, widget=forms.HiddenInput())

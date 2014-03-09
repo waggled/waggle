@@ -4,7 +4,7 @@ from django.template import RequestContext
 from django.http import HttpResponse, Http404
 from django.forms.formsets import formset_factory
 from models import *
-import results
+from results import *
 import datetime
 from electionapp.settings import *
 from electionapp.forms import *
@@ -12,8 +12,12 @@ import time
 import tools
 
 def polls_overview(request):
-	elections = Election.objects
+	elections = Election.objects.order_by('-creation_date')
 	return render_to_response('polls.html', {'Elections': elections})
+
+def users_overview(request):
+	users = User.objects.order_by('-date')
+	return render_to_response('users.html', {'Users': users})
 
 def index(request):
 	return render_to_response('index.html')
@@ -73,7 +77,7 @@ def admin_election(request, election):
     return render_to_response('admin_election.html', {'election': election}, context_instance=RequestContext(request))
 
 def view_results(request, election):
-    election = results.check_and_compute(election)
+    election = check_and_compute(election)
     return render_to_response('view_results.html', {'election': election}, context_instance=RequestContext(request))
 
 def close_election(request, key, open=False):
@@ -120,7 +124,7 @@ def edit_vote(request,key):
         raise Http404
 
 def vote(request, election, user=None, user_key='', already_voted=False, edit_vote=False):
-    #TODO: adapt to multiple systems by creating a metaForm
+    #TODO: adapt to multiple systems
     my_choices = []
     for key, value in election.candidates.items():
         my_choices.append((key,value))
@@ -137,7 +141,11 @@ def vote(request, election, user=None, user_key='', already_voted=False, edit_vo
                     ip = request.META['REMOTE_ADDR']
                 user = User(ip=ip, type=9)
                 user.save()
-            results.cast_ballot(form.cleaned_data, user, election.systems[0].system, election)
+            if already_voted:
+                prev_ballots = Ballot.objects(user=user,election=election)
+                for ballot in prev_ballots:
+                    ballot.delete()
+            cast_ballot(form.cleaned_data, user, election.systems[0].system, election)
             return render_to_response('voting_page.html', {'form':form, 'send':True, 'election':election, 'user_key':user_key, 'show_already_voted':False, 'show_form':False, 'show_edit':edit_vote, 'show_vote_cast':True}, context_instance=RequestContext(request))
         else:
             return render_to_response('voting_page.html', {'form':form, 'send':False, 'election':election, 'user_key':user_key, 'show_already_voted':False, 'show_form':True, 'show_edit':edit_vote, 'show_vote_cast':False}, context_instance=RequestContext(request))
@@ -145,11 +153,21 @@ def vote(request, election, user=None, user_key='', already_voted=False, edit_vo
     else: # GET
         ballotForms=[]
         #TODO : load previous ballots and put it in form variable
-        for election_system in election.systems:
-            method_name = election_system.system.key + 'BallotForm'
-            method = globals()[method_name]
-            ballotForms.append(method(choices=my_choices, custom=election_system.custom))
-        return render_to_response('voting_page.html', {'form':ballotForms[0], 'send':False, 'election':election, 'user_key':user_key, 'show_already_voted':already_voted and not edit_vote, 'show_form':not already_voted, 'show_edit':edit_vote, 'show_vote_cast':False}, context_instance=RequestContext(request))
+        if edit_vote:
+            for election_system in election.systems:
+                ballot = Ballot.objects(system=election_system.system, election=election, user=user)[0]
+                method_name = 'get_form_data_'+election_system.system.key
+                method = globals()[method_name]
+                form_data = method(ballot.content)
+                ballot_method_name = election_system.system.key + 'BallotForm'
+                ballot_method = globals()[ballot_method_name]
+                ballotForms.append(ballot_method(choices=my_choices, custom=election_system.custom, initial=form_data))
+        else:
+            for election_system in election.systems:
+                method_name = election_system.system.key + 'BallotForm'
+                method = globals()[method_name]
+                ballotForms.append(method(choices=my_choices, custom=election_system.custom))
+        return render_to_response('voting_page.html', {'form':ballotForms[0], 'send':False, 'election':election, 'user_key':user_key, 'show_already_voted':already_voted and not edit_vote, 'show_form':(not already_voted) or edit_vote, 'show_edit':edit_vote, 'show_vote_cast':False}, context_instance=RequestContext(request))
 
 def create(request):
     CandidateFormSet = formset_factory(CandidateForm, max_num=10, formset=RequiredFormSet) #TODO: make max_num a settings.py parameter (caution, 10 is used in js too)
@@ -159,14 +177,17 @@ def create(request):
         creator_form = CreatorForm(request.POST, request.FILES, prefix='creator')
         candidate_formset = CandidateFormSet(request.POST, request.FILES, prefix='candidate')
         emailguest_formset = EmailGuestFormSet(request.POST, request.FILES, prefix='emailguest')
-        customsystem_forms = []
+        customsystem_forms = dict()
+        customs_are_valid = True
         for system in System.objects:
             method_name = system.key+'CustomForm'
             method = globals()[method_name]
             customsystem_form = method(request.POST, request.FILES, prefix=system.key+'_custom')
-            customsystem_forms.append(customsystem_form)
-        if election_form.is_valid() and candidate_formset.is_valid() and emailguest_formset.is_valid() and creator_form.is_valid():
-            print 'Forms are valid.'
+            if not customsystem_form.is_valid():
+                customs_are_valid = False
+            customsystem_form = customsystem_form.cleaned_data
+            customsystem_forms[system.key] = customsystem_form
+        if election_form.is_valid() and candidate_formset.is_valid() and emailguest_formset.is_valid() and creator_form.is_valid() and customs_are_valid:
             election_form = election_form.cleaned_data
             creator_form = creator_form.cleaned_data
             # Create election
@@ -179,9 +200,13 @@ def create(request):
             new_election.message = election_form['message']
             new_election.type = election_form['type']
             election_system = ElectionSystem()
-            election_system.system = System.objects(key=election_form['system'])[0]
+            key = election_form['system']
+            election_system.system = System.objects(key=key)[0]
+            if key=='RGV':
+                custom = {'min':customsystem_forms['RGV']['min'],'max':customsystem_forms['RGV']['max']}
+                election_system.custom=custom
             election_systems = []
-            election_systems.append(election_system) #TODO : change because this will only work for FPP
+            election_systems.append(election_system)
             new_election.systems = election_systems
             #CANDIDATES
             d_candidates = dict()
@@ -191,27 +216,27 @@ def create(request):
                 d_candidates[str(k)] = candidate_form['name']
                 k = k+1
             new_election.candidates = d_candidates
-            print new_election
             new_election.save()
             #GUESTS
-            d_guests = dict()
-            for emailguest_form in emailguest_formset:
-                emailguest_form = emailguest_form.cleaned_data
-                matching_emails = User.objects(email=emailguest_form['email'])
-                if matching_emails.count()==0:
-                    user = User()
-                    user.type = 2
-                    user.email = emailguest_form['email']
-                    user.invited_to = [new_election]
-                else:
-                    user = matching_emails[0]
-                    if not user.invited_to is None:
-                        user.invited_to.append(new_election)
-                    else:
+            if new_election.type=='1': # if there are guests
+                d_guests = dict()
+                for emailguest_form in emailguest_formset:
+                    emailguest_form = emailguest_form.cleaned_data
+                    matching_emails = User.objects(email=emailguest_form['email'])
+                    if matching_emails.count()==0:
+                        user = User()
+                        user.type = 2
+                        user.email = emailguest_form['email']
                         user.invited_to = [new_election]
-                user.save()
-                d_guests[tools.get_new_guest_key()] = user
-            new_election.guests = d_guests
+                    else:
+                        user = matching_emails[0]
+                        if not user.invited_to is None:
+                            user.invited_to.append(new_election)
+                        else:
+                            user.invited_to = [new_election]
+                    user.save()
+                    d_guests[tools.get_new_guest_key()] = user
+                new_election.guests = d_guests
             #RESULTS
             new_election.results = []
             for election_system in new_election.systems:
@@ -243,20 +268,20 @@ def create(request):
                     else:
                         admin.admin_of = [new_election]
                 admin.save()
-            return render_to_response('create.html', {'success':True})
+                return render_to_response('create.html', {'success':True})
         else:
-            return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset, 'customsystem_forms':customsystem_forms}, context_instance=RequestContext(request))
+            return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset,'creator_form':creator_form, 'customsystem_forms':customsystem_forms}, context_instance=RequestContext(request))
     else: # GET
         election_form = ElectionForm(prefix='election')
         creator_form = CreatorForm(prefix='creator')
         candidate_formset = CandidateFormSet(prefix='candidate')
         emailguest_formset = EmailGuestFormSet(prefix='emailguest')
-        customsystem_forms = []
+        customsystem_forms = dict()
         for system in System.objects:
             key = system.key
             method_name = system.key + 'CustomForm'
             method = globals()[method_name]
-            customsystem_forms.append(method(prefix=key+'_custom'))
+            customsystem_forms[key] = method(prefix=key+'_custom')
         return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset, 'creator_form':creator_form, 'customsystem_forms':customsystem_forms}, context_instance=RequestContext(request))
 
 def systems(request):

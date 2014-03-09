@@ -155,7 +155,7 @@
     </div>
     
     <div class='customsystem'>
-        {% for customsystem_form in customsystem_forms %}
+        {% for key,customsystem_form in customsystem_forms.items %}
             {{ customsystem_form.as_p }}
         {% endfor %}
         <div id='RGV-slider' style="display:none">

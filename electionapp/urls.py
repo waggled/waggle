@@ -3,6 +3,7 @@ from django.conf.urls import patterns, url
 urlpatterns = patterns('electionapp.views',
 	url(r'^$', 			'index'),
     url(r'^polls/$',    'polls_overview'),
+    url(r'^users/$',    'users_overview'),
 	url(r'^about/$', 	'about'),
 	url(r'^systems/$', 	'systems'),
 	url(r'^create/$', 	'create'),

@@ -25,6 +25,11 @@ def get_ballot_content_FPP(form_data):
     ballot_content.candidate = form_data['candidates']
     return [ballot_content]
 
+def get_form_data_FPP(ballot_content):
+    form_data = dict()
+    form_data['candidates'] = ballot_content[0]['candidate']
+    return form_data
+
 def get_ballot_content_RGV(form_data):
     res = []
     for key,value in form_data.items():
