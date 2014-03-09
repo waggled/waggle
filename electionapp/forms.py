@@ -9,9 +9,15 @@ class RequiredFormSet(BaseFormSet):
         for form in self.forms:
             form.empty_permitted = False
 
-class RGVCustomForm(forms.Form): #TODO : use RangeField and RangeWidget
-    min = forms.IntegerField() #TODO : handle dynamically 'required' argument
-    max = forms.IntegerField()
+class RGVCustomForm(forms.Form):
+    min = forms.IntegerField(required=False, widget=forms.HiddenInput(), initial=0) #TODO : handle dynamically 'required' argument
+    max = forms.IntegerField(required=False, widget=forms.HiddenInput(), initial=20)
+
+class FPPCustomForm(forms.Form):
+    useless = forms.IntegerField(required=False, widget=forms.HiddenInput())
+
+class BDACustomForm(forms.Form):
+    useless = forms.IntegerField(required=False, widget=forms.HiddenInput())
 
 class CandidateForm(forms.Form):
     name = forms.CharField(min_length=1,max_length=140, required=True)

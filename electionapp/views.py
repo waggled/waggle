@@ -159,6 +159,12 @@ def create(request):
         creator_form = CreatorForm(request.POST, request.FILES, prefix='creator')
         candidate_formset = CandidateFormSet(request.POST, request.FILES, prefix='candidate')
         emailguest_formset = EmailGuestFormSet(request.POST, request.FILES, prefix='emailguest')
+        customsystem_forms = []
+        for system in System.objects:
+            method_name = system.key+'CustomForm'
+            method = globals()[method_name]
+            customsystem_form = method(request.POST, request.FILES, prefix=system.key+'_custom')
+            customsystem_forms.append(customsystem_form)
         if election_form.is_valid() and candidate_formset.is_valid() and emailguest_formset.is_valid() and creator_form.is_valid():
             print 'Forms are valid.'
             election_form = election_form.cleaned_data
@@ -197,7 +203,6 @@ def create(request):
                     user.type = 2
                     user.email = emailguest_form['email']
                     user.invited_to = [new_election]
-                
                 else:
                     user = matching_emails[0]
                     if not user.invited_to is None:
@@ -240,13 +245,19 @@ def create(request):
                 admin.save()
             return render_to_response('create.html', {'success':True})
         else:
-            return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset}, context_instance=RequestContext(request))
+            return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset, 'customsystem_forms':customsystem_forms}, context_instance=RequestContext(request))
     else: # GET
         election_form = ElectionForm(prefix='election')
         creator_form = CreatorForm(prefix='creator')
         candidate_formset = CandidateFormSet(prefix='candidate')
         emailguest_formset = EmailGuestFormSet(prefix='emailguest')
-        return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset, 'creator_form':creator_form}, context_instance=RequestContext(request))
+        customsystem_forms = []
+        for system in System.objects:
+            key = system.key
+            method_name = system.key + 'CustomForm'
+            method = globals()[method_name]
+            customsystem_forms.append(method(prefix=key+'_custom'))
+        return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset, 'creator_form':creator_form, 'customsystem_forms':customsystem_forms}, context_instance=RequestContext(request))
 
 def systems(request):
     systems = System.objects

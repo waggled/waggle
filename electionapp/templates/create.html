@@ -1,6 +1,59 @@
 {% extends "base.html" %}
 
 {% block javascript %}
+<link rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+
+<script>
+    $(function() {
+      $(window).load(function(event) {
+                     var key = $('#id_election-system').val();
+                     if(key=='RGV'){
+                     $('#RGV-slider').show()
+                     $('#id_RGV_custom-min').attr('required',true)
+                     $('#id_RGV_custom-max').attr('required',true)
+                     }
+                     else{
+                     $('#RGV-slider').hide()
+                     $('#id_RGV_custom-min').attr('required',false)
+                     $('#id_RGV_custom-max').attr('required',false)
+                     }
+                     }); // TODO : some factorization is possible here
+      
+      $('#id_election-system').change(function(event) {
+                                      var key = $('#id_election-system').val();
+                                      if(key=='RGV'){
+                                        $('#RGV-slider').show()
+                                        $('#id_RGV_custom-min').attr('required',true)
+                                        $('#id_RGV_custom-max').attr('required',true)
+                                      }
+                                      else{
+                                        $('#RGV-slider').hide()
+                                        $('#id_RGV_custom-min').attr('required',false)
+                                        $('#id_RGV_custom-max').attr('required',false)
+                                      }
+                        });
+    });
+    
+</script>
+
+<script>
+        $(function() {
+          $( "#slider-range" ).slider({
+                                      range: true,
+                                      min: 0,
+                                      max: 100,
+                                      values: [ 0, 20 ],
+                                      slide: function( event, ui ) {
+                                        $( "#amount" ).val( ui.values[ 0 ] + " - " + ui.values[ 1 ] );
+                                        $('#id_RGV_custom-min').val(ui.values[0]);
+                                        $('#id_RGV_custom-max').val(ui.values[1]);
+                                      }
+                                      });
+          $( "#amount" ).val($( "#slider-range" ).slider( "values", 0 ) +
+                             " - " + $( "#slider-range" ).slider( "values", 1 ) );
+          });
+        </script>
+
 <script>
     var s_to_print = {'candidate': 'candidate', 'emailguest':'guest'};
     $(document).ready(function () {
@@ -86,6 +139,7 @@
                       
                       });
     </script>
+
 {% endblock %}
 
 {% block content %}
@@ -99,6 +153,21 @@
         <h2>General information</h2>
         {{ election_form.as_p }}
     </div>
+    
+    <div class='customsystem'>
+        {% for customsystem_form in customsystem_forms %}
+            {{ customsystem_form.as_p }}
+        {% endfor %}
+        <div id='RGV-slider' style="display:none">
+            <p>
+            <label for="amount">Range of grades:</label>
+            <input type="text" id="amount" style="border:0; color:#f6931f; font-weight:bold;">
+                </p>
+            <div id="slider-range"></div>
+        </div>
+    </div>
+
+        
     <div class='candidates'>
         <h2>Candidates</h2>
         {{ candidate_formset.management_form }}
