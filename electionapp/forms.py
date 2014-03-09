@@ -23,7 +23,7 @@ class CandidateForm(forms.Form):
     name = forms.CharField(min_length=1,max_length=140, required=True)
 
 class EmailGuestForm(forms.Form):
-    email = forms.EmailField(required=True)
+    email = forms.EmailField(required=False)
 
 class ElectionForm(forms.Form):
     name = forms.CharField(min_length=2, max_length=140, required=True, label='Name of the poll')
@@ -54,7 +54,7 @@ class BDABallotForm(BallotForm):
     def __init__(self, *args, **kwargs):
         super(BDABallotForm, self).__init__(*args, **kwargs)
         self.requires_ranking = True
-    ranking = forms.CharField(max_length=1000, required=True)# TODO: rajouter l'argument widget=forms.HiddenInput()
+    ranking = forms.CharField(max_length=1000, required=True, widget=forms.HiddenInput())
 
 class RGVBallotForm(BallotForm):
     def __init__(self, *args, **kwargs):

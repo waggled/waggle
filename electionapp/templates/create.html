@@ -5,47 +5,46 @@
 
 <script>
     $(function() {
+      
+      function guestsVisibility() {
+      var type =  $('input[name=election-type]:checked').val();
+      if(type==1){
+      $('.guests').show();
+      //$('.guests input').each(function(){$(this).attr('required');});
+      $('.guests input').each(function(){$(this).prop('required',true);});
+      }
+      else{
+      $('.guests').hide();
+      //$('.guests input').each(function(){$(this).removeAttr('required');});
+      $('.guests input').each(function(){$(this).prop('required',false);});
+      }
+      }
+      
+      function customsystemVisibility() {
+      var key = $('#id_election-system').val();
+      if(key=='RGV'){
+      $('#RGV-slider').show();
+      //$('#id_RGV_custom-min').attr('required');
+      $('#id_RGV_custom-min').prop('required',true);
+      //$('#id_RGV_custom-max').attr('required');
+      $('#id_RGV_custom-max').prop('required',true);
+      }
+      else{
+      $('#RGV-slider').hide();
+      //$('#id_RGV_custom-min').removeAttr('required');
+      $('#id_RGV_custom-min').prop('required',false);
+      //$('#id_RGV_custom-max').removeAttr('required');
+      $('#id_RGV_custom-max').prop('required',false);
+      }
+      }
+      
       $(window).load(function(event) {
-                     $('.guests').hide();
-                     
-                     var key = $('#id_election-system').val();
-                     if(key=='RGV'){
-                     $('#RGV-slider').show()
-                     $('#id_RGV_custom-min').attr('required',true)
-                     $('#id_RGV_custom-max').attr('required',true)
-                     }
-                     else{
-                     $('#RGV-slider').hide()
-                     $('#id_RGV_custom-min').attr('required',false)
-                     $('#id_RGV_custom-max').attr('required',false)
-                     }
-                     }); // TODO : some factorization is possible here
+                     guestsVisibility();
+                     customsystemVisibility();
+                     });
       
-      $('#id_election-system').change(function(event) {
-                                      var key = $('#id_election-system').val();
-                                      if(key=='RGV'){
-                                      $('#RGV-slider').show()
-                                      $('#id_RGV_custom-min').attr('required',true)
-                                      $('#id_RGV_custom-max').attr('required',true)
-                                      }
-                                      else{
-                                      $('#RGV-slider').hide()
-                                      $('#id_RGV_custom-min').attr('required',false)
-                                      $('#id_RGV_custom-max').attr('required',false)
-                                      }
-                                      });
-      
-      $('#id_election-type').change(function(event) {
-                                   
-                                      var type =  $('input[name=election-type]:checked').val();
-                                    if(type==1){
-                                        $('.guests').show();
-                                      }
-                                      else{
-                                        $('.guests').hide();
-                                      }
-                                      });
-      
+      $('#id_election-system').change(function(event){customsystemVisibility()});
+      $('#id_election-type').change(function(event){guestsVisibility();});
       
     });
     

@@ -11,6 +11,11 @@
   <body>
       <div id="header">
           {% block header %}
+          <a href="{% url 'electionapp.views.polls_overview' %}">All polls</a>
+          <a href="{% url 'electionapp.views.users_overview' %}">All users</a>
+          <a href="{% url 'electionapp.views.index' %}">Index</a>
+          <a href="{% url 'electionapp.views.create' %}">Create</a>
+          
           {% endblock %}
       </div>
       <div id="content">
