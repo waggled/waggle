@@ -21,18 +21,6 @@ class System(Document):
     name = StringField(max_length = 100, required = True)
     description = EmbeddedDocumentField(SystemDescription, required=True)
 
-# RESULTS
-
-class ResultRanking(EmbeddedDocument):
-    candidate = StringField(required=True)
-    rank = IntField(required=True)
-    score = FloatField()
-
-class Result(Document):
-    system = ReferenceField(System)
-    up_to_date = BooleanField(required = True)
-    date = DateTimeField(required = True)
-    ranking = ListField(EmbeddedDocumentField(ResultRanking))
 
 # ELECTIONS
 
@@ -42,24 +30,40 @@ class ElectionSystem(EmbeddedDocument):
 
 class Election(Document):
     def delete(self, *args, **kwargs):
-        #for result in self.results:
-            #result.delete()
-        for guest in self.guests:
-            if self in guests[guest].invited_to:
+        print self.guests
+        for key,guest in self.guests.items():
+            if self in guest.invited_to:
                 guest.invited_to.remove(self)
+        if not self.admin_user is None:
+            self.admin_user.admin_of.remove(self)
         super(Election, self).delete(*args, **kwargs)
     key = StringField(max_length=16, required=True)
     type = IntField(required=True)
     admin_key = StringField(max_length=8, required=True)
+    admin_user = ReferenceField('MyUser')
     open = BooleanField(required=True)
     name = StringField(max_length=120, required=True)
     candidates = DictField(required=True)
     message = StringField(max_length=1000)
     systems = ListField(EmbeddedDocumentField(ElectionSystem))
     guests = DictField()
-    results = ListField(ReferenceField(Result))
+    results = ListField(ReferenceField('Result'))
     creation_date = DateTimeField(required=True)
     closing_date = DateTimeField()
+
+# RESULTS
+
+class ResultRanking(EmbeddedDocument):
+    candidate = StringField(required=True)
+    rank = IntField(required=True)
+    score = FloatField()
+
+class Result(Document):
+    system = ReferenceField(System)
+    election = ReferenceField(Election, reverse_delete_rule=CASCADE)
+    up_to_date = BooleanField(required = True)
+    date = DateTimeField(required = True)
+    ranking = ListField(EmbeddedDocumentField(ResultRanking))
 
 # USERS
 

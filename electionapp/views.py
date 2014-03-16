@@ -253,6 +253,7 @@ def create(request):
             new_election.results = []
             for election_system in new_election.systems:
                 result = Result()
+                result.election = new_election
                 result.system = System.objects(key=election_system.system.key)[0]
                 result.up_to_date = False
                 result.date = datetime.datetime.now()
@@ -275,6 +276,8 @@ def create(request):
                     admin.admin_of = [new_election]
                 else:
                     admin = matching_admin[0]
+                    new_election.admin_user = admin
+                    new_election.save()
                     if not admin.admin_of is None:
                         admin.admin_of.append(new_election)
                     else:
@@ -315,6 +318,7 @@ def account(request):
     if request.method == 'POST':
         form = AccountCreationForm(request.POST)
         if form.is_valid():
+            name = form.cleaned_data['name']
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             password_check = form.cleaned_data['password_check']
@@ -332,11 +336,13 @@ def account(request):
                         existing_user = matching_users[0]
                         existing_user.set_password(password)
                         existing_user.type = 1
+                        existing_user.name = name
                         existing_user.save()
                     else:
                         #TODO : create a new user
                         user = MyUser.create_user(email, password, email)
                         user.type = 1
+                        user.name = name
                         try:
                             ip = request.META['HTTP_X_FORWARDED_FOR']
                         except KeyError:
@@ -376,4 +382,4 @@ def delete_election(request, key):
     #TODO: remove this election form voted_in, admin_of, etc
     el = Election.objects(key=key)[0]
     el.delete()
-    return render_to_response('polls.html')
+    return redirect(polls_overview)

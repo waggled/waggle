@@ -3,4 +3,11 @@
 {% block content %}
 <h1>Account dashboard</h1>
 
+<p>Your polls:</p>
+<ul>
+{% for election in user.admin_of %}
+<li><a href="{% url 'electionapp.views.analyze_key' election.key|add:election.admin_key %}">{{election.name}}</a> ({% if election.open %}Open{% else %}Closed{% endif %})</li>
+{% endfor %}
+</ul>
+
 {% endblock %}

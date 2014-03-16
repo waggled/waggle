@@ -21,7 +21,7 @@
           <a href="{% url 'electionapp.views.create' %}">Create a poll</a>
           
           {% if user.is_authenticated %}
-          {{user.username}}
+          {{user.name}}
           <a href="{% url 'electionapp.views.dashboard' %}">Dashboard</a>
           <a href="{% url 'electionapp.views.logout' %}">Logout</a>
           {% else %}

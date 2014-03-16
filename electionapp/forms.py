@@ -9,6 +9,7 @@ class LoginForm(forms.Form):
     password = forms.CharField(label='Password', widget=forms.PasswordInput)
 
 class AccountCreationForm(forms.Form):
+    name = forms.CharField(label='Name', required=True)
     email = forms.EmailField(label='Email', required=True)
     password = forms.CharField(label='Password', widget=forms.PasswordInput, required=True)
     password_check = forms.CharField(label='Password verification', widget=forms.PasswordInput, required=True)
