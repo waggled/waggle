@@ -27,6 +27,7 @@ TEMPLATE_DEBUG = True
 
 ALLOWED_HOSTS = ['localhost']
 
+LOGIN_URL = '/login/'
 
 # Application definition
 TEMPLATE_DIRS = (
@@ -40,6 +41,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 	'electionapp',
+    'mongoengine.django.mongo_auth',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -51,10 +53,24 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
+AUTHENTICATION_BACKENDS = (
+                           'mongoengine.django.auth.MongoEngineBackend',
+                           )
+
+AUTH_USER_MODEL = 'mongo_auth.MongoUser'
+
+MONGOENGINE_USER_DOCUMENT = 'mongoengine.django.auth.User'
+
+SESSION_ENGINE = 'mongoengine.django.sessions'
+SESSION_SERIALIZER = 'mongoengine.django.sessions.BSONSerializer'
+
 ROOT_URLCONF = 'waggle.urls'
 
 WSGI_APPLICATION = 'waggle.wsgi.application'
 
+TEMPLATE_CONTEXT_PROCESSORS = (
+                               "django.contrib.auth.context_processors.auth",
+                            )
 
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases

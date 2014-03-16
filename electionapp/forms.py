@@ -3,6 +3,16 @@ from django import forms
 from models import *
 from django.forms.formsets import BaseFormSet
 
+
+class LoginForm(forms.Form):
+    username = forms.CharField(label='Email', max_length=30)
+    password = forms.CharField(label='Password', widget=forms.PasswordInput)
+
+class AccountCreationForm(forms.Form):
+    email = forms.EmailField(label='Email', required=True)
+    password = forms.CharField(label='Password', widget=forms.PasswordInput, required=True)
+    password_check = forms.CharField(label='Password verification', widget=forms.PasswordInput, required=True)
+
 class RequiredFormSet(BaseFormSet):
     def __init__(self, *args, **kwargs):
         super(RequiredFormSet, self).__init__(*args, **kwargs)

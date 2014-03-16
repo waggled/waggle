@@ -16,6 +16,15 @@
           <a href="{% url 'electionapp.views.index' %}">Index</a>
           <a href="{% url 'electionapp.views.create' %}">Create</a>
           
+          {% if user.is_authenticated %}
+          {{user.username}}
+          <a href="{% url 'electionapp.views.dashboard' %}">Dashboard</a>
+          <a href="{% url 'electionapp.views.logout' %}">Logout</a>
+          {% else %}
+          <a href="{% url 'electionapp.views.account' %}">Create an account</a>
+          <a href="{% url 'electionapp.views.login' %}">Login</a>
+          {% endif %}
+          
           {% endblock %}
       </div>
       <div id="content">

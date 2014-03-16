@@ -5,6 +5,8 @@ sys.path.append(os.path.abspath('..'))
 from waggle.settings import DBNAME
 import datetime
 import tools
+from django.contrib.auth.decorators import login_required
+from mongoengine.django.auth import User
 
 connect(DBNAME)
 
@@ -54,11 +56,17 @@ class Election(Document):
 
 # USERS
 
-class User(Document):
+class MyUser(User):
     def __init__(self, *args, **kwargs):
-        super(User, self).__init__(*args, **kwargs)
+        super(MyUser, self).__init__(*args, **kwargs)
         self.date=datetime.datetime.now()
-    type = IntField(required=True)
+    def save(self, *args, **kwargs):
+        if not self.email is None:
+            self.username=self.email
+        else:
+            self.username=tools.get_random_username()
+        super(User, self).save(*args, **kwargs)
+    type = IntField()
     email = EmailField()
     fb_id = StringField()
     password = StringField()
@@ -68,6 +76,8 @@ class User(Document):
     name = StringField(max_length=255)
     ip = StringField(max_length=20)
     date = DateTimeField(required=True)
+    USERNAME_FIELD='email'
+    REQUIRED_FIELDS=[]
 
 # BALLOTS
 
@@ -79,6 +89,6 @@ class BallotContent(EmbeddedDocument):
 class Ballot(Document):
     system = ReferenceField(System, required=True)
     election = ReferenceField(Election, required=True)
-    user = ReferenceField(User,required=True)
+    user = ReferenceField(MyUser,required=True)
     content = ListField(EmbeddedDocumentField(BallotContent))
     date = DateTimeField(required=True)

@@ -10,17 +10,22 @@ from electionapp.settings import *
 from electionapp.forms import *
 import time
 import tools
+from django.shortcuts import render
+from django.core.urlresolvers import reverse
+from mongoengine.django.auth import *
+from django.contrib.auth import login as django_login
+from django.contrib.auth import logout as django_logout
 
 def polls_overview(request):
 	elections = Election.objects.order_by('-creation_date')
-	return render_to_response('polls.html', {'Elections': elections})
+	return render_to_response('polls.html', {'Elections': elections},context_instance=RequestContext(request))
 
 def users_overview(request):
-	users = User.objects.order_by('-date')
-	return render_to_response('users.html', {'Users': users})
+    users = MyUser.objects.order_by('-date')
+    return render_to_response('users.html', {'Users': users},context_instance=RequestContext(request))
 
 def index(request):
-	return render_to_response('index.html')
+	return render_to_response('index.html',context_instance=RequestContext(request))
 
 def analyze_key(request, key):
     if len(key) >= KEYA_LEN: #if key is long enough to identify a keyA
@@ -139,7 +144,7 @@ def vote(request, election, user=None, user_key='', already_voted=False, edit_vo
                     ip = request.META['HTTP_X_FORWARDED_FOR']
                 except KeyError:
                     ip = request.META['REMOTE_ADDR']
-                user = User(ip=ip, type=9)
+                user = MyUser(ip=ip, type=9)
                 user.save()
             if already_voted:
                 prev_ballots = Ballot.objects(user=user,election=election)
@@ -221,9 +226,9 @@ def create(request):
                 d_guests = dict()
                 for emailguest_form in emailguest_formset:
                     emailguest_form = emailguest_form.cleaned_data
-                    matching_emails = User.objects(email=emailguest_form['email'])
+                    matching_emails = MyUser.objects(email=emailguest_form['email'])
                     if matching_emails.count()==0:
-                        user = User()
+                        user = MyUser()
                         user.type = 2
                         user.email = emailguest_form['email']
                         user.invited_to = [new_election]
@@ -248,9 +253,9 @@ def create(request):
             new_election.save()
             #Create admin user
             if 'email' in creator_form.keys():
-                matching_admin = User.objects(email = creator_form['email'])
+                matching_admin = MyUser.objects(email = creator_form['email'])
                 if matching_admin.count()==0:
-                    admin = User()
+                    admin = MyUser()
                     admin.type = 2
                     if not creator_form['email'] is None:
                         admin.email = creator_form['email']
@@ -285,17 +290,76 @@ def create(request):
 
 def systems(request):
     systems = System.objects
-    return render_to_response('systems.html', {'systems':systems})
+    return render_to_response('systems.html', {'systems':systems},context_instance=RequestContext(request))
 
+@login_required
 def dashboard(request):
-	return render_to_response('index.html')
-
-def account(request):
-	return render_to_response('index.html')
+	return render_to_response('dashboard.html',context_instance=RequestContext(request))
 
 def about(request):
-	return render_to_response('about.html')
+	return render_to_response('about.html',context_instance=RequestContext(request))
 
 def custom_404(request):
-    return render_to_response('404.html')
+    return render_to_response('404.html',context_instance=RequestContext(request))
 
+def account(request):
+    success = False
+    if request.method == 'POST':
+        form = AccountCreationForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+            password_check = form.cleaned_data['password_check']
+        #First check if email is taken
+        matching_accounts = MyUser.objects(email=email, type=1)
+        if matching_accounts.count()>0:
+            message = 'Account already exists.'
+        else:
+            if password <> password_check:
+                message='Password verification failed.'
+            else:
+                    message = 'Account created. Please confirm your email by clicking on the link we sent you.'
+                    matching_users = MyUser.objects(email=email)
+                    if matching_users.count()>0:
+                        existing_user = matching_users[0]
+                        existing_user.set_password(password)
+                        existing_user.type = 1
+                        existing_user.save()
+                    else:
+                        #TODO : create a new user
+                        user = MyUser.create_user(email, password, email)
+                        user.type = 1
+                        try:
+                            ip = request.META['HTTP_X_FORWARDED_FOR']
+                        except KeyError:
+                            ip = request.META['REMOTE_ADDR']
+                        user.ip = ip
+                        user.save()
+                    success=True
+                    return render_to_response('account.html', locals(), context_instance=RequestContext(request))
+        return render_to_response('account.html', locals(), context_instance=RequestContext(request))
+    else:
+        form = AccountCreationForm()
+        return render_to_response('account.html', locals(), context_instance=RequestContext(request))
+
+def login(request):
+    error = False
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            backend = MongoEngineBackend()
+            username = form.cleaned_data['username']  # Nous récupérons le nom d'utilisateur
+            password = form.cleaned_data['password']  # … et le mot de passe
+            user = backend.authenticate(username=username, password=password)  #Nous vérifions si les données sont correctes
+            if user:  # Si l'objet renvoyé n'est pas None
+                django_login(request, user)  # nous connectons l'utilisateur
+            else: #sinon une erreur sera affichée
+                error = True
+    else:
+        form = LoginForm()
+    return render_to_response('login.html',locals(), context_instance=RequestContext(request))
+
+@login_required
+def logout(request):
+    django_logout(request)
+    return redirect(reverse(login))
