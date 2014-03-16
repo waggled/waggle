@@ -41,6 +41,13 @@ class ElectionSystem(EmbeddedDocument):
     custom = DictField()
 
 class Election(Document):
+    def delete(self, *args, **kwargs):
+        #for result in self.results:
+            #result.delete()
+        for guest in self.guests:
+            if self in guests[guest].invited_to:
+                guest.invited_to.remove(self)
+        super(Election, self).delete(*args, **kwargs)
     key = StringField(max_length=16, required=True)
     type = IntField(required=True)
     admin_key = StringField(max_length=8, required=True)
@@ -87,8 +94,11 @@ class BallotContent(EmbeddedDocument):
     score = FloatField()
 
 class Ballot(Document):
+    def delete(self, *args, **kwargs):
+        self.user.voted_in.remove(self)
+        super(Ballot, self).delete(*args, **kwargs)
     system = ReferenceField(System, required=True)
-    election = ReferenceField(Election, required=True)
+    election = ReferenceField(Election, required=True, reverse_delete_rule=CASCADE)
     user = ReferenceField(MyUser,required=True)
     content = ListField(EmbeddedDocumentField(BallotContent))
     date = DateTimeField(required=True)

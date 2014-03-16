@@ -4,6 +4,8 @@ urlpatterns = patterns('electionapp.views',
 	url(r'^$', 			'index'),
     url(r'^polls/$',    'polls_overview'),
     url(r'^users/$',    'users_overview'),
+    url(r'^ballots/$',    'ballots_overview'),
+    url(r'^results/$',    'results_overview'),
     url(r'^login/$', 'login'),
     url(r'^logout/$', 'logout'),
 	url(r'^about/$', 	'about'),
@@ -15,5 +17,6 @@ urlpatterns = patterns('electionapp.views',
     url(r'^(\w+)/close/$', 'close_election'),
     url(r'^(\w+)/edit/$', 'edit_vote'),
     url(r'^(\w+)/close/(\w+)$', 'close_election'), #dev only
+    url(r'^(\w+)/delete$', 'delete_election'), #dev only
     url(r'^vote/$', 'vote'),
 )

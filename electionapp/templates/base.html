@@ -11,10 +11,14 @@
   <body>
       <div id="header">
           {% block header %}
+          [
           <a href="{% url 'electionapp.views.polls_overview' %}">All polls</a>
           <a href="{% url 'electionapp.views.users_overview' %}">All users</a>
+          <a href="{% url 'electionapp.views.ballots_overview' %}">All ballots</a>
+          <a href="{% url 'electionapp.views.results_overview' %}">All results</a>
+          ]
           <a href="{% url 'electionapp.views.index' %}">Index</a>
-          <a href="{% url 'electionapp.views.create' %}">Create</a>
+          <a href="{% url 'electionapp.views.create' %}">Create a poll</a>
           
           {% if user.is_authenticated %}
           {{user.username}}

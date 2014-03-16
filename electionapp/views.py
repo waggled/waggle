@@ -24,6 +24,14 @@ def users_overview(request):
     users = MyUser.objects.order_by('-date')
     return render_to_response('users.html', {'Users': users},context_instance=RequestContext(request))
 
+def ballots_overview(request):
+    ballots = Ballot.objects.order_by('-date')
+    return render_to_response('ballots.html', {'Ballots': ballots},context_instance=RequestContext(request))
+
+def results_overview(request):
+    results = Result.objects.order_by('-date')
+    return render_to_response('results.html', {'Results': results},context_instance=RequestContext(request))
+
 def index(request):
 	return render_to_response('index.html',context_instance=RequestContext(request))
 
@@ -363,3 +371,9 @@ def login(request):
 def logout(request):
     django_logout(request)
     return redirect(reverse(login))
+
+def delete_election(request, key):
+    #TODO: remove this election form voted_in, admin_of, etc
+    el = Election.objects(key=key)[0]
+    el.delete()
+    return render_to_response('polls.html')
