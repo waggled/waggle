@@ -3,11 +3,21 @@
 {% block content %}
 <h1>Admin page of the poll "{{election.name}}"</h1>
 {% if election.open %}
+
 <p>This election is still open. You need to close it to see the results. Caution, if you close it there is no going back!</p>
 <form action="{% url 'electionapp.views.close_election' election.key|add:election.admin_key %}" method="POST">{% csrf_token %}
     <input type="submit" value="Close the election" />
 </form>
+
+<p>Guests:</p>
+<ul>
+{% for guest_key,guest in election.guests.items %}
+<li>{{guest.email}} {% if election in guest.voted_in %}(voted){% else %}(did not vote){% endif %}</li>
+{% endfor %}
+</ul>
+
 {% else %}
+
 <p>The election is closed.
 <form action="{% url 'electionapp.views.analyze_key' election.key %}" method="POST">{% csrf_token %}
     <input type="submit" value="See results" />
@@ -15,5 +25,6 @@
 <form action="{% url 'electionapp.views.close_election' election.key|add:election.admin_key True %}" method="POST">{% csrf_token %}
     <input type="submit" value="Open election (dev only)" />
 </form>
+
 {% endif %}
 {% endblock %}
