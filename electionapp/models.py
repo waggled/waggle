@@ -30,12 +30,24 @@ class ElectionSystem(EmbeddedDocument):
 
 class Election(Document):
     def delete(self, *args, **kwargs):
-        print self.guests
         for key,guest in self.guests.items():
             if self in guest.invited_to:
                 guest.invited_to.remove(self)
+                if len(guest.invited_to)==0:
+                    del guest.invited_to
+                guest.save()
+            if self in guest.voted_in:
+                guest.voted_in.remove(self)
+                if len(guest.voted_in)==0:
+                    del guest.voted_in
+                guest.save()
         if not self.admin_user is None:
             self.admin_user.admin_of.remove(self)
+            if len(self.admin_user.admin_of)==0:
+                del self.admin_user.admin_of
+                self.admin_user.save()
+        for result in self.results:
+            del result
         super(Election, self).delete(*args, **kwargs)
     key = StringField(max_length=16, required=True)
     type = IntField(required=True)
@@ -99,7 +111,7 @@ class BallotContent(EmbeddedDocument):
 
 class Ballot(Document):
     def delete(self, *args, **kwargs):
-        self.user.voted_in.remove(self)
+        self.user.voted_in.remove(self.election)
         super(Ballot, self).delete(*args, **kwargs)
     system = ReferenceField(System, required=True)
     election = ReferenceField(Election, required=True, reverse_delete_rule=CASCADE)

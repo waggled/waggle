@@ -12,7 +12,8 @@ def cast_ballot(form_data, user, system, election):
     method = globals()[method_name]
     ballot.content = method(form_data)
     ballot.save()
-    user.voted_in.append(election)
+    if not election in user.voted_in:
+        user.voted_in.append(election)
     user.update(set__voted_in=user.voted_in)
     for result in election.results:
         if result.system == system:

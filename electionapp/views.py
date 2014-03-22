@@ -261,29 +261,28 @@ def create(request):
                 new_election.results.append(result)
             new_election.save()
             #Create admin user
-            if 'email' in creator_form.keys():
-                matching_admin = MyUser.objects(email = creator_form['email'])
-                if matching_admin.count()==0:
-                    admin = MyUser()
-                    admin.type = 2
-                    if not creator_form['email'] is None:
-                        admin.email = creator_form['email']
-                    try:
-                        ip = request.META['HTTP_X_FORWARDED_FOR']
-                    except KeyError:
-                        ip = request.META['REMOTE_ADDR']
-                    admin.ip = ip
-                    admin.admin_of = [new_election]
+            matching_admin = MyUser.objects(email = creator_form['email'])
+            if matching_admin.count()==0:
+                admin = MyUser()
+                admin.type = 2
+                if creator_form['email']<>'':
+                    admin.email = creator_form['email']
+                try:
+                    ip = request.META['HTTP_X_FORWARDED_FOR']
+                except KeyError:
+                    ip = request.META['REMOTE_ADDR']
+                admin.ip = ip
+                admin.admin_of = [new_election]
+            else:
+                admin = matching_admin[0]
+                if not admin.admin_of is None:
+                    admin.admin_of.append(new_election)
                 else:
-                    admin = matching_admin[0]
-                    new_election.admin_user = admin
-                    new_election.save()
-                    if not admin.admin_of is None:
-                        admin.admin_of.append(new_election)
-                    else:
-                        admin.admin_of = [new_election]
-                admin.save()
-                return render_to_response('create.html', {'success':True})
+                    admin.admin_of = [new_election]
+            admin.save()
+            new_election.admin_user = admin
+            new_election.save()
+            return render_to_response('create.html', {'success':True})
         else:
             return render_to_response('create.html', {'election_form':election_form, 'candidate_formset':candidate_formset, 'emailguest_formset': emailguest_formset,'creator_form':creator_form, 'customsystem_forms':customsystem_forms}, context_instance=RequestContext(request))
     else: # GET
