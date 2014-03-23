@@ -318,7 +318,8 @@ def account(request):
                         user.ip = tools.get_ip(request)
                         user.save()
                     success=True
-                    return render_to_response('account.html', locals(), context_instance=RequestContext(request))
+                    account_just_created = True
+                    return render_to_response('account.html', locals())#, context_instance=RequestContext(request))
         return render_to_response('account.html', locals(), context_instance=RequestContext(request))
     else:
         form = AccountCreationForm()

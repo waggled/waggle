@@ -20,7 +20,7 @@
           <a href="{% url 'electionapp.views.index' %}">Index</a>
           <a href="{% url 'electionapp.views.create' %}">Create a poll</a>
           
-          {% if user.is_authenticated %}
+          {% if user.is_authenticated and not account_just_created %}
           {{user.name}}
           <a href="{% url 'electionapp.views.dashboard' %}">Dashboard</a>
           <a href="{% url 'electionapp.views.logout' %}">Logout</a>
