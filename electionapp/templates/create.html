@@ -6,16 +6,19 @@
 <script>
     $(function() {
       
+      function updateEmailRequiredness() {
+      var checked = $('#id_creator-invite_me').is(':checked');
+      $('#id_creator-email').prop('required',checked);
+      }
+      
       function guestsVisibility() {
       var type =  $('input[name=election-type]:checked').val();
       if(type==1){
       $('.guests').show();
-      //$('.guests input').each(function(){$(this).attr('required');});
       $('.guests input').each(function(){$(this).prop('required',true);});
       }
       else{
       $('.guests').hide();
-      //$('.guests input').each(function(){$(this).removeAttr('required');});
       $('.guests input').each(function(){$(this).prop('required',false);});
       }
       }
@@ -24,27 +27,41 @@
       var key = $('#id_election-system').val();
       if(key=='RGV'){
       $('#RGV-slider').show();
-      //$('#id_RGV_custom-min').attr('required');
       $('#id_RGV_custom-min').prop('required',true);
-      //$('#id_RGV_custom-max').attr('required');
       $('#id_RGV_custom-max').prop('required',true);
       }
       else{
       $('#RGV-slider').hide();
-      //$('#id_RGV_custom-min').removeAttr('required');
       $('#id_RGV_custom-min').prop('required',false);
-      //$('#id_RGV_custom-max').removeAttr('required');
       $('#id_RGV_custom-max').prop('required',false);
+      }
+      }
+      
+      function inviteMeVisibility() {
+      var type =  $('input[name=election-type]:checked').val();
+      if(type==1){
+      $('p #id_creator-invite_me').parent().show();
+      }
+      else{
+      $('#id_creator-invite_me').parent().hide();
       }
       }
       
       $(window).load(function(event) {
                      guestsVisibility();
                      customsystemVisibility();
+                     inviteMeVisibility();
+                     updateEmailRequiredness();
                      });
       
       $('#id_election-system').change(function(event){customsystemVisibility()});
-      $('#id_election-type').change(function(event){guestsVisibility();});
+      $('#id_election-type').change(function(event){
+                                    guestsVisibility();
+                                    inviteMeVisibility();
+                                    });
+      $('#id_creator-invite_me').change(function(event){
+                                        updateEmailRequiredness();
+                                        });
       
     });
     

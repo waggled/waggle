@@ -43,8 +43,9 @@ class ElectionForm(forms.Form):
     system = forms.ChoiceField(choices=[(s.key,s.name) for s in System.objects.all()], required=True)
 
 class CreatorForm(forms.Form):
-    your_name = forms.CharField(min_length=2, max_length=140, required=True)
+    name = forms.CharField(min_length=2, max_length=140, required=True)
     email = forms.EmailField(required=False)
+    invite_me = forms.BooleanField(required=False, label="I'm voting too")
 
 class BallotForm(forms.Form):
     def __init__(self, *args, **kwargs):

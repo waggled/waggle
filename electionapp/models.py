@@ -49,6 +49,32 @@ class Election(Document):
         for result in self.results:
             del result
         super(Election, self).delete(*args, **kwargs)
+    
+    def add_guest(self, user):
+        if self.guests is None:
+            self.guests = dict()
+        for key,guest in self.guests.items():
+            if guest==user:
+                print 'This user is already invited'
+                #TODO : do sthg
+        self.guests[tools.get_new_guest_key()]=user
+        if not user.invited_to is None:
+            user.invited_to.append(self)
+        else:
+            user.invited_to = [self]
+        user.save()
+
+    def add_guest_by_email(self, email):
+        matching_emails = MyUser.objects(email=email)
+        if matching_emails.count()==0:
+            user = MyUser()
+            user.type = 2
+            user.email = email
+            user.save()
+        else:
+            user = matching_emails[0]
+        self.add_guest(user)
+
     key = StringField(max_length=16, required=True)
     type = IntField(required=True)
     admin_key = StringField(max_length=8, required=True)

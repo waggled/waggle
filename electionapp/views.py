@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render_to_response, redirect, render
 from django.template import RequestContext
 from django.http import HttpResponse, Http404
 from django.forms.formsets import formset_factory
@@ -10,7 +10,6 @@ from electionapp.settings import *
 from electionapp.forms import *
 import time
 import tools
-from django.shortcuts import render
 from django.core.urlresolvers import reverse
 from mongoengine.django.auth import *
 from django.contrib.auth import login as django_login
@@ -148,11 +147,7 @@ def vote(request, election, user=None, user_key='', already_voted=False, edit_vo
             form = method(request.POST, choices=my_choices, custom=election_system.custom)
         if form.is_valid():
             if user==None:
-                try:
-                    ip = request.META['HTTP_X_FORWARDED_FOR']
-                except KeyError:
-                    ip = request.META['REMOTE_ADDR']
-                user = MyUser(ip=ip, type=9)
+                user = MyUser(ip=tools.get_ip(request), type=9)
                 user.save()
             if already_voted:
                 prev_ballots = Ballot.objects(user=user,election=election)
@@ -203,14 +198,7 @@ def create(request):
             election_form = election_form.cleaned_data
             creator_form = creator_form.cleaned_data
             # Create election
-            new_election = Election()
-            new_election.admin_key = tools.get_new_guest_key()
-            new_election.key = tools.get_new_election_key()
-            new_election.creation_date = datetime.datetime.now()
-            new_election.open = True
-            new_election.name = election_form['name']
-            new_election.message = election_form['message']
-            new_election.type = election_form['type']
+            new_election = Election(admin_key = tools.get_new_guest_key(), key = tools.get_new_election_key(),  creation_date = datetime.datetime.now(), open = True, name = election_form['name'], message = election_form['message'], type = election_form['type'])
             election_system = ElectionSystem()
             key = election_form['system']
             election_system.system = System.objects(key=key)[0]
@@ -230,25 +218,11 @@ def create(request):
             new_election.candidates = d_candidates
             new_election.save()
             #GUESTS
-            if new_election.type=='1': # if there are guests
-                d_guests = dict()
+            if new_election.type==1: # if there are guests
                 for emailguest_form in emailguest_formset:
                     emailguest_form = emailguest_form.cleaned_data
-                    matching_emails = MyUser.objects(email=emailguest_form['email'])
-                    if matching_emails.count()==0:
-                        user = MyUser()
-                        user.type = 2
-                        user.email = emailguest_form['email']
-                        user.invited_to = [new_election]
-                    else:
-                        user = matching_emails[0]
-                        if not user.invited_to is None:
-                            user.invited_to.append(new_election)
-                        else:
-                            user.invited_to = [new_election]
-                    user.save()
-                    d_guests[tools.get_new_guest_key()] = user
-                new_election.guests = d_guests
+                    print 'Adding guest '+emailguest_form['email']
+                    new_election.add_guest_by_email(emailguest_form['email'])
             #RESULTS
             new_election.results = []
             for election_system in new_election.systems:
@@ -267,11 +241,8 @@ def create(request):
                 admin.type = 2
                 if creator_form['email']<>'':
                     admin.email = creator_form['email']
-                try:
-                    ip = request.META['HTTP_X_FORWARDED_FOR']
-                except KeyError:
-                    ip = request.META['REMOTE_ADDR']
-                admin.ip = ip
+                admin.ip = tools.get_ip(request)
+                admin.name = creator_form['name']
                 admin.admin_of = [new_election]
             else:
                 admin = matching_admin[0]
@@ -281,6 +252,8 @@ def create(request):
                     admin.admin_of = [new_election]
             admin.save()
             new_election.admin_user = admin
+            if creator_form['invite_me']:
+                new_election.add_guest(admin)
             new_election.save()
             return render_to_response('create.html', {'success':True})
         else:
@@ -342,11 +315,7 @@ def account(request):
                         user = MyUser.create_user(email, password, email)
                         user.type = 1
                         user.name = name
-                        try:
-                            ip = request.META['HTTP_X_FORWARDED_FOR']
-                        except KeyError:
-                            ip = request.META['REMOTE_ADDR']
-                        user.ip = ip
+                        user.ip = tools.get_ip(request)
                         user.save()
                     success=True
                     return render_to_response('account.html', locals(), context_instance=RequestContext(request))
@@ -378,7 +347,6 @@ def logout(request):
     return redirect(reverse(login))
 
 def delete_election(request, key):
-    #TODO: remove this election form voted_in, admin_of, etc
     el = Election.objects(key=key)[0]
     el.delete()
     return redirect(polls_overview)
