@@ -46,8 +46,8 @@ class Election(Document):
             if len(self.admin_user.admin_of)==0:
                 del self.admin_user.admin_of
                 self.admin_user.save()
-        for result in self.results:
-            del result
+        #for result in self.results:
+        #del result
         super(Election, self).delete(*args, **kwargs)
     
     def add_guest(self, user):

@@ -90,11 +90,7 @@ def check_and_compute(election):
             method_name = 'compute' + system.key
             method = globals()[method_name]
             ranking = method(election.id, election.candidates, system)
-            result = Result()
-            result.date = datetime.datetime.now()
-            result.ranking = ranking
-            result.system = system
-            result.up_to_date = True
+            result = Result(date=datetime.datetime.now(), ranking=ranking, system=system, up_to_date=True, election=election)
             result.save()
             election.results.append(result)
     election.save()
